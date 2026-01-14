@@ -14,8 +14,8 @@ namespace HyperEmpoloyees.Code.Helpers
     {
         public static void Add(string title, string description)
         {
-            IDataHelper<SystemRecords> dataHelper = new SystemRecordsEF();
-            SystemRecords systemRecords = new SystemRecords
+            IDataHelper<SystemRecord> dataHelper = new SystemRecordRepository();
+            SystemRecord systemRecords = new SystemRecord
             {
                 CreatedDate = DateTime.Now,
                 Description = description,
@@ -23,7 +23,7 @@ namespace HyperEmpoloyees.Code.Helpers
                 DeviceName = Environment.UserName,
                 UserFullName = LocalUser.FullName,
                 UsersId = LocalUser.Id,
-                MachinId = GetMacnineId()
+                MachineId = GetMacnineId()
             };
             dataHelper.Add(systemRecords);
         }

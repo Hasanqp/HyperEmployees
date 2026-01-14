@@ -3,48 +3,43 @@ using HyperEmpoloyees.Code.Models;
 using HyperEmpoloyees.Core;
 using HyperEmpoloyees.Data.EF;
 using HyperEmpoloyees.Gui.LoadingGui;
-using Microsoft.VisualBasic.ApplicationServices;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace HyperEmpoloyees.Gui.UsersGui
 {
     public partial class AddUserForm : Form
     {
-        private readonly IDataHelper<Users> dataHelperForUser;
-        private readonly IDataHelper<Roles> dataHelperForRoles;
-        private readonly IDataHelper<SystemRecords> dataHelperForSystemRecords;
-        private readonly Main main;
-        private int Id;
-        private DateTime userCreatedDate;
-        private readonly UsersUserControl page;
+        private readonly IDataHelper<Core.User> userDataHelper;
+        private readonly IDataHelper<Role> roleDataHelper;
+        private readonly IDataHelper<SystemRecord> systemRecordsDataHelper;
+        private readonly Main mainForm;
+        private int userId;
+        private DateTime userCreatedDate = DateTime.Now;
+        private readonly UsersUserControl parentPage;
 
-        public AddUserForm(Main main, int id, UsersUserControl page)
+        public AddUserForm(Main mainForm, int userId, UsersUserControl parentPage)
         {
             InitializeComponent();
 
-            dataHelperForUser = new UsersEF();
-            dataHelperForRoles = new RolesEF();
-            dataHelperForSystemRecords = new SystemRecordsEF();
+            userDataHelper = new UserRepository();
+            roleDataHelper = new RoleRepository();
+            systemRecordsDataHelper = new SystemRecordRepository();
 
-            this.Owner = main;
+
+            // Set owner only when Main context exists
+            if (mainForm != null)
+                this.Owner = mainForm;
 
 
             AddSecondaryUser();
             SetRoles();
-            this.main = main;
-            this.Id = id;
-            this.page = page;
 
-            if(Id > 0)
+            this.mainForm = mainForm;
+            this.parentPage = parentPage;
+            this.userId = userId;
+
+            // Edit mode only when valid user id is provided
+            if (this.userId > 0)
             {
                 SetDataForEdit();
             }
@@ -73,48 +68,48 @@ namespace HyperEmpoloyees.Gui.UsersGui
             else
             {
                 // Show Loading
-                LoadingForm.Instance(main).Show();
+                LoadingForm.Instance(mainForm).Show();
                 // Check Connection
-                if (await Task.Run(() => dataHelperForUser.IsCanConnect()))
+                if (await Task.Run(() => userDataHelper.IsCanConnect()))
                 {
                     // Check Duplicated Item
 
                     string fullName = textBoxFullName.Text;
                     string userName = textBoxUserName.Text;
 
-                    var result = await Task.Run(() => dataHelperForUser
+                    var result = await Task.Run(() => userDataHelper
                     .GetAllData()
-                    .Where(x => x.Id != Id)
+                    .Where(x => x.Id != userId)
                     .Where(x => x.FullName == fullName || x.UserName == userName)
-                    .FirstOrDefault() ?? new Users());
+                    .FirstOrDefault() ?? new Core.User());
 
                     if (result.Id > 0)
                     {
                         // Msg for Duplicatad data
-                        LoadingForm.Instance(main).Show();
+                        LoadingForm.Instance(mainForm).Show();
                         MsgHelper.ShowDuplicatedItems();
                     }
                     else
                     {
                         // Add
-                        if (Id == 0)
+                        if (userId == 0)
                         {
-                            Add();
+                            AddUser();
                         }
                         else
                         {
                             // Edit
-                            Edit();
+                            EditUser();
                         }
                     }
                 }
                 else
                 {
-                    LoadingForm.Instance(main).Show();
+                    LoadingForm.Instance(mainForm).Show();
                     MsgHelper.ShowServerError();
                 }
 
-                LoadingForm.Instance(main).Hide();
+                LoadingForm.Instance(mainForm).Hide();
             }
 
         }
@@ -158,68 +153,68 @@ namespace HyperEmpoloyees.Gui.UsersGui
             comboBoxUserId.SelectedIndex = 0;
         }
 
+        private void comboBoxRole_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            SetRolesByMainRole();
+        }
+
         private void SetRolesByMainRole()
         {
-            if (comboBoxRole.SelectedIndex.ToString() == "Admin") // Admin
+            string role = comboBoxRole.SelectedItem?.ToString() ?? "";
+
+            // Reset first
+            if (comboBoxRole.SelectedItem?.ToString() != "Admin")
             {
-                checkBoxAbout.Checked = true;
-                checkBoxAdd.Checked = true;
-                checkBoxDelete.Checked = true;
-                checkBoxEdit.Checked = true;
-                checkBoxEmpolyees.Checked = true;
-                checkBoxExport.Checked = true;
-                checkBoxHelp.Checked = true;
-                checkBoxHome.Checked = true;
-                checkBoxHomeSearch.Checked = true;
-                checkBoxPrint.Checked = true;
-                checkBoxReports.Checked = true;
-                checkBoxRetirment.Checked = true;
-                checkBoxSalaryIndex.Checked = true;
-                checkBoxSearch.Checked = true;
-                checkBoxSettings.Checked = true;
-                checkBoxSystemRecords.Checked = true;
-                checkBoxUsers.Checked = true;
+                // Enforce security
+                foreach (var item in flowLayoutPanelRoles.Controls)
+                {
+                    if (item is CheckBox cb)
+                        cb.Checked = false;
+                }
             }
-            else if (comboBoxRole.SelectedIndex.ToString() == "User") // User
+
+            // Common permissions
+            checkBoxAbout.Checked = true;
+            checkBoxEmpolyees.Checked = true;
+            checkBoxExport.Checked = true;
+            checkBoxHelp.Checked = true;
+            checkBoxHome.Checked = true;
+            checkBoxHomeSearch.Checked = true;
+            checkBoxPrint.Checked = true;
+            checkBoxReports.Checked = true;
+            checkBoxRetirment.Checked = true;
+            checkBoxSalaryIndex.Checked = true;
+            checkBoxSearch.Checked = true;
+            checkBoxSettings.Checked = true;
+
+            if (role == "Admin") // Admin
             {
-                checkBoxAbout.Checked = true;
+                // Full access
                 checkBoxAdd.Checked = true;
-                checkBoxDelete.Checked = true;
                 checkBoxEdit.Checked = true;
-                checkBoxEmpolyees.Checked = true;
-                checkBoxExport.Checked = true;
-                checkBoxHelp.Checked = true;
-                checkBoxHome.Checked = true;
-                checkBoxHomeSearch.Checked = true;
-                checkBoxPrint.Checked = true;
-                checkBoxReports.Checked = true;
-                checkBoxRetirment.Checked = true;
-                checkBoxSalaryIndex.Checked = true;
-                checkBoxSearch.Checked = true;
-                checkBoxSettings.Checked = true;
-                checkBoxSystemRecords.Checked = true;
+                checkBoxDelete.Checked = true;
                 checkBoxUsers.Checked = true;
+
+                checkBoxSystemRecords.Checked = true;
+            }
+            else if (role == "User") // User
+            {
+                checkBoxAdd.Checked = true;
+                checkBoxEdit.Checked = true;
+                checkBoxDelete.Checked = true;
+                checkBoxUsers.Checked = true;
+
+                checkBoxSystemRecords.Checked = false;
             }
             else // Read
             {
 
-                checkBoxAbout.Checked = true;
                 checkBoxAdd.Checked = false;
-                checkBoxDelete.Checked = false;
                 checkBoxEdit.Checked = false;
-                checkBoxEmpolyees.Checked = true;
-                checkBoxExport.Checked = true;
-                checkBoxHelp.Checked = true;
-                checkBoxHome.Checked = true;
-                checkBoxHomeSearch.Checked = true;
-                checkBoxPrint.Checked = true;
-                checkBoxReports.Checked = true;
-                checkBoxRetirment.Checked = true;
-                checkBoxSalaryIndex.Checked = true;
-                checkBoxSearch.Checked = true;
-                checkBoxSettings.Checked = true;
-                checkBoxSystemRecords.Checked = true;
+                checkBoxDelete.Checked = false;
                 checkBoxUsers.Checked = false;
+
+                checkBoxSystemRecords.Checked = false;
             }
         }
 
@@ -250,10 +245,10 @@ namespace HyperEmpoloyees.Gui.UsersGui
             }
         }
 
-        private async void Add()
+        private async void AddUser()
         {
             // Set User
-            Users users = new Users
+            Core.User users = new Core.User
             {
                 FullName = textBoxFullName.Text,
                 Password = textBoxPassword.Text,
@@ -269,7 +264,7 @@ namespace HyperEmpoloyees.Gui.UsersGui
             };
 
             // Send Data to data base
-            var result = await Task.Run(() => dataHelperForUser.Add(users));
+            var result = await Task.Run(() => userDataHelper.Add(users));
             if (result == "1")
             {
                 // Add User Roles
@@ -277,7 +272,7 @@ namespace HyperEmpoloyees.Gui.UsersGui
                 {
                     CheckBox checkBox = (CheckBox)item;
                     // Set
-                    Roles roles = new Roles
+                    Role roles = new Role
                     {
                         Key = checkBox.Name,
                         Value = checkBox.Checked,
@@ -285,13 +280,13 @@ namespace HyperEmpoloyees.Gui.UsersGui
                     };
 
                     // Send
-                    await Task.Run(() => dataHelperForRoles.Add(roles));
+                    await Task.Run(() => roleDataHelper.Add(roles));
                 }
 
                 // Success
                 SystemRecordHelper.Add("Добавить пользователя",
                     $"Добавлен новый пользователь с идентификатором {users.Id}");
-                page.LoadData();
+                parentPage.LoadDataAsync();
                 ToastHelper.ShowAddToast();
                 this.Close();
             }
@@ -302,12 +297,12 @@ namespace HyperEmpoloyees.Gui.UsersGui
             }
         }
 
-        private async void Edit()
+        private async void EditUser()
         {
             // Set User
-            Users users = new Users
+            Core.User users = new Core.User
             {
-                Id=Id,
+                Id = userId,
                 FullName = textBoxFullName.Text,
                 Password = textBoxPassword.Text,
                 UserName = textBoxUserName.Text,
@@ -322,22 +317,22 @@ namespace HyperEmpoloyees.Gui.UsersGui
             };
 
             // Send Data to data base
-            var result = await Task.Run(() => dataHelperForUser.Edit(users));
+            var result = await Task.Run(() => userDataHelper.Edit(users));
             if (result == "1")
             {
                 // Remove Old User Roles
-                var oldroles = await Task.Run(() => dataHelperForRoles
-                .GetAllData().Where(x=>x.UsersId==Id).ToList()??new List<Roles>());
-                foreach(var role in oldroles)
+                var oldroles = await Task.Run(() => roleDataHelper
+                .GetAllData().Where(x => x.UsersId == userId).ToList() ?? new List<Role>());
+                foreach (var role in oldroles)
                 {
-                    await Task.Run(() => dataHelperForRoles.Delete(role.Id));
+                    await Task.Run(() => roleDataHelper.Delete(role.Id));
                 }
                 // Add User Roles
                 foreach (var item in flowLayoutPanelRoles.Controls)
                 {
                     CheckBox checkBox = (CheckBox)item;
                     // Set
-                    Roles roles = new Roles
+                    Role roles = new Role
                     {
                         Key = checkBox.Name,
                         Value = checkBox.Checked,
@@ -345,13 +340,13 @@ namespace HyperEmpoloyees.Gui.UsersGui
                     };
 
                     // Send
-                    await Task.Run(() => dataHelperForRoles.Add(roles));
+                    await Task.Run(() => roleDataHelper.Add(roles));
                 }
 
                 // Success
                 SystemRecordHelper.Add("Изменение пользователем. ",
                     $"Существующий пользователь с таким идентификатором был изменен {users.Id}");
-                page.LoadData();
+                parentPage.LoadDataAsync();
                 ToastHelper.ShowEditToast();
                 this.Close();
             }
@@ -365,7 +360,7 @@ namespace HyperEmpoloyees.Gui.UsersGui
         private async void SetDataForEdit()
         {
             // Get Edit User Data
-            var _user = await Task.Run(() => dataHelperForUser.Find(Id));
+            var _user = await Task.Run(() => userDataHelper.Find(userId));
             if (_user != null)
             {
                 textBoxFullName.Text = _user.FullName;
@@ -376,7 +371,7 @@ namespace HyperEmpoloyees.Gui.UsersGui
                 textBoxAddress.Text = _user.Address;
                 comboBoxRole.SelectedItem = _user.Role;
                 checkBoxSecondaryUser.Checked = _user.IsSecondaryUser;
-                userCreatedDate=_user.CreatedDate;
+                userCreatedDate = _user.CreatedDate;
             }
 
             // Set Roles
@@ -386,12 +381,13 @@ namespace HyperEmpoloyees.Gui.UsersGui
             {
                 CheckBox checkBox = (CheckBox)item;
 
-                checkBox.Checked = await Task.Run(() => dataHelperForRoles
+                checkBox.Checked = await Task.Run(() => roleDataHelper
                 .GetAllData()
-                .Where(x =>x.UsersId == Id && x.Key ==  checkBox.Name)
+                .Where(x => x.UsersId == userId && x.Key == checkBox.Name)
                 .Select(x => x.Value).FirstOrDefault());
             }
         }
+
         #endregion
     }
 }

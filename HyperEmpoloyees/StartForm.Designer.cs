@@ -127,7 +127,6 @@
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.CenterScreen;
             Text = "StartForm";
-            Load += StartForm_Load;
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             panelSettings.ResumeLayout(false);
             panelSettings.PerformLayout();

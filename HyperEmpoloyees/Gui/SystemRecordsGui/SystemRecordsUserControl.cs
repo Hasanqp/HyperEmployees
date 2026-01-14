@@ -3,42 +3,34 @@ using HyperEmpoloyees.Code.Models;
 using HyperEmpoloyees.Core;
 using HyperEmpoloyees.Data.EF;
 using HyperEmpoloyees.Gui.LoadingGui;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace HyperEmpoloyees.Gui.SystemRecordsGui
 {
     public partial class SystemRecordsUserControl : UserControl
     {
         private static SystemRecordsUserControl? systemRecordsControl;
-        private static Main _main;
-        private IDataHelper<Core.SystemRecords> dataHelper;
-        private List<Core.SystemRecords> data;
-        private List<int> IdDeleteList;
+        private static Main mainForm;
+        private IDataHelper<Core.SystemRecord> systemRecordDataHelper;
+        private List<Core.SystemRecord> systemRecords;
+        private List<int> deleteIds;
 
         public SystemRecordsUserControl()
         {
             InitializeComponent();
-            dataHelper = new SystemRecordsEF();
-            data = new List<SystemRecords>();
-            IdDeleteList = new List<int>();
+            systemRecordDataHelper = new SystemRecordRepository();
+            systemRecords = new List<SystemRecord>();
+            deleteIds = new List<int>();
             LoadData();
         }
 
         public static SystemRecordsUserControl Instance(Main main)
         {
-            _main = main;
+            mainForm = main;
             return systemRecordsControl ?? (systemRecordsControl = new SystemRecordsUserControl());
         }
 
-        #region Evints
+        #region Events
         private async void buttonDelete_Click(object sender, EventArgs e)
         {
             try
@@ -49,28 +41,28 @@ namespace HyperEmpoloyees.Gui.SystemRecordsGui
 
                     // Get Id
                     SetIdDeleteList();
-                    if (IdDeleteList.Count > 0)
+                    if (deleteIds.Count > 0)
                     {
                         if (MsgHelper.ShowDeleteDialog())
                         {
-                            LoadingForm.Instance(_main).Show();
-                            if (await Task.Run(() => dataHelper.IsCanConnect()))
+                            LoadingForm.Instance(mainForm).Show();
+                            if (await Task.Run(() => systemRecordDataHelper.IsCanConnect()))
                             {
                                 // Loop into Id List
-                                foreach (int Id in IdDeleteList)
+                                foreach (int Id in deleteIds)
                                 {
-                                    await Task.Run(() => dataHelper.Delete(Id));
+                                    await Task.Run(() => systemRecordDataHelper.Delete(Id));
                                 }
                                 ToastHelper.ShowDeleteToast();
                                 LoadData();
                             }
                             else
                             {
-                                LoadingForm.Instance(_main).Hide();
+                                LoadingForm.Instance(mainForm).Hide();
                                 MsgHelper.ShowServerError();
                             }
 
-                            LoadingForm.Instance(_main).Hide();
+                            LoadingForm.Instance(mainForm).Hide();
                         }
                     }
                     else
@@ -81,7 +73,7 @@ namespace HyperEmpoloyees.Gui.SystemRecordsGui
                 }
                 else
                 {
-                    LoadingForm.Instance(_main).Hide();
+                    LoadingForm.Instance(mainForm).Hide();
                     MsgHelper.ShowEmptyDataGridView();
                 }
             }
@@ -115,44 +107,47 @@ namespace HyperEmpoloyees.Gui.SystemRecordsGui
         private async void buttonExportAll_Click(object sender, EventArgs e)
         {
             // Show Loading
-            LoadingForm.Instance(_main).Show();
-            if (await Task.Run(() => dataHelper.IsCanConnect()))
+            LoadingForm.Instance(mainForm).Show();
+            if (await Task.Run(() => systemRecordDataHelper.IsCanConnect()))
             {
                 // Start Load Data
                 // Check if Admin or not
                 if (LocalUser.Role == "Admin")
                 {
                     // Get All Data
-                    data = await Task.Run(() => dataHelper.GetAllData());
+                    systemRecords = await Task.Run(() => systemRecordDataHelper.GetAllData());
                 }
                 else
                 {
                     // Get Data By User
-                    data = await Task.Run(() => dataHelper.GetDataByUser(LocalUser.UserId));
+                    systemRecords = await Task.Run(() => systemRecordDataHelper.GetDataByUser(LocalUser.UserId));
                 }
-                LoadingForm.Instance(_main).Hide();
+                LoadingForm.Instance(mainForm).Hide();
 
-                ExportExcel(data);
+                ExportExcel(systemRecords);
             }
             else
             {
                 // No Conection
-                LoadingForm.Instance(_main).Hide();
+                LoadingForm.Instance(mainForm).Hide();
                 ShowServerErrorState();
                 MsgHelper.ShowServerError();
             }
             // Hide Loading
-            LoadingForm.Instance(_main).Hide();
+            LoadingForm.Instance(mainForm).Hide();
         }
 
         private void buttonExportDataGridView_Click(object sender, EventArgs e)
         {
             // Get Data
-            var data = (List<SystemRecords>)dataGridView1.DataSource;
-            ExportExcel(data);
+            var data = dataGridView1.DataSource as List<SystemRecord>;
+            if (data != null)
+            {
+                ExportExcel(data);
+            }
         }
 
-        private void ExportExcel(List<SystemRecords> data)
+        private void ExportExcel(List<SystemRecord> data)
         {
             // Define Data Table
             DataTable dataTable = new DataTable();
@@ -164,7 +159,7 @@ namespace HyperEmpoloyees.Gui.SystemRecordsGui
             }
 
             // Re-Set DataTable
-            dataTable = arrangedDataTable(dataTable);
+            dataTable = ArrangeDataTable(dataTable);
 
             // Send to export
             ExcelHelper.Export(dataTable, "SystemRecords");
@@ -197,48 +192,49 @@ namespace HyperEmpoloyees.Gui.SystemRecordsGui
             try
             {
                 // Show Loading
-                LoadingForm.Instance(_main).Show();
-                if (await Task.Run(() => dataHelper.IsCanConnect()))
+                LoadingForm.Instance(mainForm).Show();
+                if (await Task.Run(() => systemRecordDataHelper.IsCanConnect()))
                 {
                     // Start Load Data
                     // Check if Admin or not
                     if (LocalUser.Role == "Admin")
                     {
                         // Get All Data
-                        data = await Task.Run(() => dataHelper.GetAllData());
+                        systemRecords = await Task.Run(() => systemRecordDataHelper.GetAllData());
                     }
                     else
                     {
                         // Get Data By User
-                        data = await Task.Run(() => dataHelper.GetDataByUser(LocalUser.UserId));
+                        systemRecords = await Task.Run(() => systemRecordDataHelper.GetDataByUser(LocalUser.UserId));
                     }
                     // No Of all items in db
-                    labelNoOfItems.Text = data.Count.ToString();
+                    labelNoOfItems.Text = systemRecords.Count.ToString();
                     // Get And set parameters
-                    var idlist = data.Select(x => x.Id).ToArray();
+                    var idlist = systemRecords.Select(x => x.Id).ToArray();
                     int index = comboBoxNoOfPage.SelectedIndex;
                     int noOfItemIndex = index * Properties.Settings.Default.NoDataGridViewItems;
 
                     // Fill DataGridView
-                    dataGridView1.DataSource = data.Where(x => x.Id <= idlist[noOfItemIndex])
-                        .Take(Properties.Settings.Default.NoDataGridViewItems).ToList();
+                    dataGridView1.DataSource = systemRecords
+                        .Skip(index * Properties.Settings.Default.NoDataGridViewItems)
+                        .Take(Properties.Settings.Default.NoDataGridViewItems)
+                        .ToList();
+
 
                     // Show Empty Data
                     ShowEmptyDataState();
 
-                    // Clear Data
-                    data.Clear();
-                    LoadingForm.Instance(_main).Hide();
+                    LoadingForm.Instance(mainForm).Hide();
                 }
                 else
                 {
                     // No Conection
-                    LoadingForm.Instance(_main).Hide();
+                    LoadingForm.Instance(mainForm).Hide();
                     ShowServerErrorState();
                     MsgHelper.ShowServerError();
                 }
                 // Hide Loading
-                LoadingForm.Instance(_main).Hide();
+                LoadingForm.Instance(mainForm).Hide();
             }
             catch
             { }
@@ -251,27 +247,27 @@ namespace HyperEmpoloyees.Gui.SystemRecordsGui
         public async void LoadData()
         {
             // Show Loading
-            LoadingForm.Instance(_main).Show();
-            if (await Task.Run(() => dataHelper.IsCanConnect()))
+            LoadingForm.Instance(mainForm).Show();
+            if (await Task.Run(() => systemRecordDataHelper.IsCanConnect()))
             {
                 // Start Load Data
                 // Check if Admin or not
                 if (LocalUser.Role == "Admin")
                 {
                     // Get All Data
-                    data = await Task.Run(() => dataHelper.GetAllData());
+                    systemRecords = await Task.Run(() => systemRecordDataHelper.GetAllData());
                 }
                 else
                 {
                     // Get Data By User
-                    data = await Task.Run(() => dataHelper.GetDataByUser(LocalUser.UserId));
+                    systemRecords = await Task.Run(() => systemRecordDataHelper.GetDataByUser(LocalUser.UserId));
                 }
 
                 // No Of all items in db
-                labelNoOfItems.Text = data.Count.ToString();
+                labelNoOfItems.Text = systemRecords.Count.ToString();
                 // Fill DataGridView
-                dataGridView1.DataSource = data.Take(Properties.Settings.Default.NoDataGridViewItems).ToList();
-                if (data.Count <= Properties.Settings.Default.NoDataGridViewItems)
+                dataGridView1.DataSource = systemRecords.Take(Properties.Settings.Default.NoDataGridViewItems).ToList();
+                if (systemRecords.Count <= Properties.Settings.Default.NoDataGridViewItems)
                 {
                     comboBoxNoOfPage.Items.Clear();
                     comboBoxNoOfPage.Items.Add(0);
@@ -279,7 +275,7 @@ namespace HyperEmpoloyees.Gui.SystemRecordsGui
                 else
                 {
                     // Get And Add No Of Pages
-                    double value = Convert.ToDouble(data.Count) / Convert.ToDouble(Properties.Settings.Default.NoDataGridViewItems);
+                    double value = Convert.ToDouble(systemRecords.Count) / Convert.ToDouble(Properties.Settings.Default.NoDataGridViewItems);
                     int noOfPage = Convert.ToInt32(Math.Round(value, MidpointRounding.AwayFromZero));
                     comboBoxNoOfPage.Items.Clear();
                     for (int i = 0; i <= noOfPage; i++)
@@ -294,26 +290,24 @@ namespace HyperEmpoloyees.Gui.SystemRecordsGui
                 // Show Empty Data
                 ShowEmptyDataState();
 
-                // Clear Data
-                data.Clear();
-                LoadingForm.Instance(_main).Hide();
+                LoadingForm.Instance(mainForm).Hide();
             }
             else
             {
                 // No Conection
-                LoadingForm.Instance(_main).Hide();
+                LoadingForm.Instance(mainForm).Hide();
                 ShowServerErrorState();
                 MsgHelper.ShowServerError();
             }
             // Hide Loading
-            LoadingForm.Instance(_main).Hide();
+            LoadingForm.Instance(mainForm).Hide();
         }
 
         public async void Search()
         {
             // Show Loading
-            LoadingForm.Instance(_main).Show();
-            if (await Task.Run(() => dataHelper.IsCanConnect()))
+            LoadingForm.Instance(mainForm).Show();
+            if (await Task.Run(() => systemRecordDataHelper.IsCanConnect()))
             {
                 // Start Load Data
                 string searchItem = textBoxSearch.Text;
@@ -321,16 +315,16 @@ namespace HyperEmpoloyees.Gui.SystemRecordsGui
                 if (LocalUser.Role == "Admin")
                 {
                     // Get All Data
-                    data = await Task.Run(() => dataHelper.SearchAll(searchItem));
+                    systemRecords = await Task.Run(() => systemRecordDataHelper.SearchAll(searchItem));
                 }
                 else
                 {
                     // Get Data By User
-                    data = await Task.Run(() => dataHelper.SearchByUser(LocalUser.UserId, searchItem));
+                    systemRecords = await Task.Run(() => systemRecordDataHelper.SearchByUser(LocalUser.UserId, searchItem));
                 }
 
                 // Fill DataGridView
-                dataGridView1.DataSource = data.ToList();
+                dataGridView1.DataSource = systemRecords.ToList();
 
                 // Set Columns Title
                 // SetColumns();
@@ -338,19 +332,17 @@ namespace HyperEmpoloyees.Gui.SystemRecordsGui
                 // Show Empty Data
                 ShowEmptyDataState();
 
-                // Clear Data
-                data.Clear();
-                LoadingForm.Instance(_main).Hide();
+                LoadingForm.Instance(mainForm).Hide();
             }
             else
             {
                 // No Conection
-                LoadingForm.Instance(_main).Hide();
+                LoadingForm.Instance(mainForm).Hide();
                 ShowServerErrorState();
                 MsgHelper.ShowServerError();
             }
             // Hide Loading
-            LoadingForm.Instance(_main).Hide();
+            LoadingForm.Instance(mainForm).Hide();
         }
 
         private void ShowEmptyDataState()
@@ -385,17 +377,17 @@ namespace HyperEmpoloyees.Gui.SystemRecordsGui
 
         private void SetIdDeleteList()
         {
-            IdDeleteList.Clear();
+            deleteIds.Clear();
             foreach (DataGridViewRow row in dataGridView1.Rows)
             {
                 if (row.Selected)
                 {
-                    IdDeleteList.Add(Convert.ToInt32(row.Cells[0].Value));
+                    deleteIds.Add(Convert.ToInt32(row.Cells[0].Value));
                 }
             }
         }
 
-        private DataTable arrangedDataTable(DataTable dataTable)
+        private DataTable ArrangeDataTable(DataTable dataTable)
         {
             dataTable.Columns["Id"].SetOrdinal(0);
             dataTable.Columns["Id"].ColumnName = "Id";

@@ -3,48 +3,48 @@ using HyperEmpoloyees.Code.Models;
 using HyperEmpoloyees.Core;
 using HyperEmpoloyees.Data.EF;
 using HyperEmpoloyees.Gui.LoadingGui;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace HyperEmpoloyees.Gui.UsersGui
 {
     public partial class UsersUserControl : UserControl
     {
-        private static UsersUserControl? usersUserControl;
+        private static UsersUserControl? _instance;
+        private Main _mainForm;
+
+
         private AddUserForm addUserForm;
-        private static Main _main;
-        private IDataHelper<Core.Users> dataHelper;
-        private List<Core.Users> data;
-        private List<int> IdDeleteList;
+        private bool columnsSet = false;
+        private IDataHelper<Core.User> userDataHelper;
+        private List<Core.User> users;
+        private List<int> deleteIds;
+        private int pageSize => Properties.Settings.Default.NoDataGridViewItems;
 
         public UsersUserControl()
         {
             InitializeComponent();
-            dataHelper = new UsersEF();
-            data = new List<Users>();
-            IdDeleteList = new List<int>();
-            LoadData();
-        }
 
+            userDataHelper = new UserRepository();
+            users = new List<User>();
+            deleteIds = new List<int>();
+        }
         public static UsersUserControl Instance(Main main)
         {
-            _main = main;
-            return usersUserControl ?? (usersUserControl = new UsersUserControl());
+            if (_instance == null || _instance.IsDisposed)
+            {
+                _instance = new UsersUserControl();
+            }
+
+            _instance.Initialize(main);
+            return _instance;
         }
 
-        #region Evints
+        #region Events
         private void buttonAdd_Click(object sender, EventArgs e)
         {
             if (addUserForm == null || addUserForm.IsDisposed)
             {
-                addUserForm = new AddUserForm(_main, 0, this);
+                addUserForm = new AddUserForm(_mainForm, 0, this);
                 addUserForm.Show();
             }
             else
@@ -56,7 +56,7 @@ namespace HyperEmpoloyees.Gui.UsersGui
 
         private void buttonEdit_Click(object sender, EventArgs e)
         {
-            Edit();
+            EditUser();
         }
 
         private async void buttonDelete_Click(object sender, EventArgs e)
@@ -69,31 +69,33 @@ namespace HyperEmpoloyees.Gui.UsersGui
 
                     // Get Id
                     SetIdDeleteList();
-                    if (IdDeleteList.Count > 0)
+                    if (deleteIds.Count > 0)
                     {
                         if (MsgHelper.ShowDeleteDialog())
                         {
-                            LoadingForm.Instance(_main).Show();
-                            if (await Task.Run(() => dataHelper.IsCanConnect()))
+                            LoadingForm.Instance(_mainForm).Show();
+                            try
                             {
-                                // Loop into Id List
-                                foreach (int Id in IdDeleteList)
+                                if (!await Task.Run(() => userDataHelper.IsCanConnect()))
                                 {
-                                    await Task.Run(() => dataHelper.Delete(Id));
+                                    MsgHelper.ShowServerError();
+                                    return;
+                                }
+                                // Loop into Id List
+                                foreach (int Id in deleteIds)
+                                {
+                                    await Task.Run(() => userDataHelper.Delete(Id));
                                     SystemRecordHelper.Add("Удалить пользователя",
                                         $"Существующий пользователь с таким идентификатором был удален{Id.ToString()}");
                                 }
 
                                 ToastHelper.ShowDeleteToast();
-                                LoadData();
+                                await LoadDataAsync();
                             }
-                            else
+                            finally
                             {
-                                LoadingForm.Instance(_main).Hide();
-                                MsgHelper.ShowServerError();
+                                LoadingForm.Instance(_mainForm).Hide();
                             }
-
-                            LoadingForm.Instance(_main).Hide();
                         }
                     }
                     else
@@ -104,7 +106,7 @@ namespace HyperEmpoloyees.Gui.UsersGui
                 }
                 else
                 {
-                    LoadingForm.Instance(_main).Hide();
+                    LoadingForm.Instance(_mainForm).Hide();
                     MsgHelper.ShowEmptyDataGridView();
                 }
             }
@@ -113,65 +115,67 @@ namespace HyperEmpoloyees.Gui.UsersGui
 
         private void buttonSearch_Click(object sender, EventArgs e)
         {
-            Search();
+            SearchAsync();
         }
 
         private void textBoxSearch_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
-                Search();
+                SearchAsync();
             }
         }
 
-        private void buttonRefresh_Click(object sender, EventArgs e)
+        private async void buttonRefresh_Click(object sender, EventArgs e)
         {
-            LoadData();
+            await LoadDataAsync();
         }
 
         private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            Edit();
+            EditUser();
         }
 
         private async void buttonExportAll_Click(object sender, EventArgs e)
         {
             // Show Loading
-            LoadingForm.Instance(_main).Show();
-            if (await Task.Run(() => dataHelper.IsCanConnect()))
+            LoadingForm.Instance(_mainForm).Show();
+            if (await Task.Run(() => userDataHelper.IsCanConnect()))
             {
                 // Start Load Data
                 // Check if Admin or not
                 if (LocalUser.Role == "Admin")
                 {
                     // Get All Data
-                    data = await Task.Run(() => dataHelper.GetAllData());
+                    users = await Task.Run(() => userDataHelper.GetAllData());
                 }
                 else
                 {
                     // Get Data By User
-                    data = await Task.Run(() => dataHelper.GetDataByUser(LocalUser.UserId));
+                    users = await Task.Run(() => userDataHelper.GetDataByUser(LocalUser.UserId));
                 }
-                LoadingForm.Instance(_main).Hide();
-
-                ExportExcel(data);
+                LoadingForm.Instance(_mainForm).Hide();
+                ExportExcel(users);
             }
             else
             {
                 // No Conection
-                LoadingForm.Instance(_main).Hide();
+                LoadingForm.Instance(_mainForm).Hide();
                 ShowServerErrorState();
                 MsgHelper.ShowServerError();
             }
             // Hide Loading
-            LoadingForm.Instance(_main).Hide();
+            LoadingForm.Instance(_mainForm).Hide();
         }
 
         private void buttonExportDataGridView_Click(object sender, EventArgs e)
         {
             // Get Data
-            var data = (List<Core.Users>)dataGridView1.DataSource;
-            ExportExcel(data);
+            var data = dataGridView1.DataSource as List<User>;
+            if (data == null) return;
+            {
+                ExportExcel(data);
+            }
         }
 
         private void buttonNext_Click(object sender, EventArgs e)
@@ -198,163 +202,99 @@ namespace HyperEmpoloyees.Gui.UsersGui
 
         private async void comboBoxNoOfPage_SelectedIndexChanged(object sender, EventArgs e)
         {
-            try
-            {
-                // Show Loading
-                LoadingForm.Instance(_main).Show();
-                if (await Task.Run(() => dataHelper.IsCanConnect()))
-                {
-                    // Start Load Data
-                    // Check if Admin or not
-                    if (LocalUser.Role == "Admin")
-                    {
-                        // Get All Data
-                        data = await Task.Run(() => dataHelper.GetAllData());
-                    }
-                    else
-                    {
-                        // Get Data By User
-                        data = await Task.Run(() => dataHelper.GetDataByUser(LocalUser.UserId));
-                    }
-                    // No Of all items in db
-                    labelNoOfItems.Text = data.Count.ToString();
-                    // Get And set parameters
-                    var idlist = data.Select(x => x.Id).ToArray();
-                    int index = comboBoxNoOfPage.SelectedIndex;
-                    int noOfItemIndex = index * Properties.Settings.Default.NoDataGridViewItems;
+            int index = comboBoxNoOfPage.SelectedIndex;
 
-                    // Fill DataGridView
-                    dataGridView1.DataSource = data.Where(x => x.Id <= idlist[noOfItemIndex])
-                        .Take(Properties.Settings.Default.NoDataGridViewItems).ToList();
+            dataGridView1.DataSource = users
+                .Skip(index * pageSize)
+                .Take(pageSize)
+                .ToList();
 
-                    // Show Empty Data
-                    ShowEmptyDataState();
-
-                    // Clear Data
-                    data.Clear();
-                    LoadingForm.Instance(_main).Hide();
-                }
-                else
-                {
-                    // No Conection
-                    LoadingForm.Instance(_main).Hide();
-                    ShowServerErrorState();
-                    MsgHelper.ShowServerError();
-                }
-                // Hide Loading
-                LoadingForm.Instance(_main).Hide();
-            }
-            catch
-            { }
+            ShowEmptyDataState();
 
         }
 
         #endregion
 
         #region Methods
-        public async void LoadData()
+        public async Task LoadDataAsync()
         {
             // Show Loading
-            LoadingForm.Instance(_main).Show();
-            if (await Task.Run(() => dataHelper.IsCanConnect()))
+            LoadingForm.Instance(_mainForm).Show();
+
+            if (!await Task.Run(() => userDataHelper.IsCanConnect()))
             {
-                // Start Load Data
-                // Check if Admin or not
-                if (LocalUser.Role == "Admin")
-                {
-                    // Get All Data
-                    data = await Task.Run(() => dataHelper.GetAllData());
-                }
-                else
-                {
-                    // Get Data By User
-                    data = await Task.Run(() => dataHelper.GetDataByUser(LocalUser.UserId));
-                }
-
-                // No Of all items in db
-                labelNoOfItems.Text = data.Count.ToString();
-                // Fill DataGridView
-                dataGridView1.DataSource = data.Take(Properties.Settings.Default.NoDataGridViewItems).ToList();
-                if (data.Count <= Properties.Settings.Default.NoDataGridViewItems)
-                {
-                    comboBoxNoOfPage.Items.Clear();
-                    comboBoxNoOfPage.Items.Add(0);
-                }
-                else
-                {
-                    // Get And Add No Of Pages
-                    double value = Convert.ToDouble(data.Count) / Convert.ToDouble(Properties.Settings.Default.NoDataGridViewItems);
-                    int noOfPage = Convert.ToInt32(Math.Round(value, MidpointRounding.AwayFromZero));
-                    comboBoxNoOfPage.Items.Clear();
-                    for (int i = 0; i <= noOfPage; i++)
-                    {
-                        comboBoxNoOfPage.Items.Add(i);
-                    }
-                }
-
-                // Set Columns Title
-                SetColumns();
-
-                // Show Empty Data
-                ShowEmptyDataState();
-
-                // Clear Data
-                data.Clear();
-                LoadingForm.Instance(_main).Hide();
-            }
-            else
-            {
-                // No Conection
-                LoadingForm.Instance(_main).Hide();
+                LoadingForm.Instance(_mainForm).Hide();
                 ShowServerErrorState();
-                MsgHelper.ShowServerError();
+                return;
             }
-            // Hide Loading
-            LoadingForm.Instance(_main).Hide();
+
+            users = LocalUser.Role == "Admin"
+                ? await Task.Run(() => userDataHelper.GetAllData())
+                : await Task.Run(() => userDataHelper.GetDataByUser(LocalUser.UserId));
+
+            labelNoOfItems.Text = users.Count.ToString();
+
+            comboBoxNoOfPage.Items.Clear();
+            int totalPages = (int)Math.Ceiling((double)users.Count / pageSize);
+            for (int i = 0; i < totalPages; i++)
+                comboBoxNoOfPage.Items.Add(i);
+
+            comboBoxNoOfPage.SelectedIndex = 0;
+            columnsSet = false;
+            SetColumns();
+
+            LoadingForm.Instance(_mainForm).Hide();
         }
 
-        public async void Search()
+        public async Task SearchAsync()
         {
             // Show Loading
-            LoadingForm.Instance(_main).Show();
-            if (await Task.Run(() => dataHelper.IsCanConnect()))
+            LoadingForm.Instance(_mainForm).Show();
+            try
             {
-                // Start Load Data
+                if (!await Task.Run(() => userDataHelper.IsCanConnect()))
+                {   
+                    // Start Load Data
+                    ShowServerErrorState();
+                    MsgHelper.ShowServerError();
+                    return;
+                }
+
                 string searchItem = textBoxSearch.Text;
+
                 // Check if Admin or not
-                if (LocalUser.Role == "Admin")
-                {
+                users = LocalUser.Role == "Admin"
+
                     // Get All Data
-                    data = await Task.Run(() => dataHelper.SearchAll(searchItem));
-                }
-                else
-                {
-                    // Get Data By User
-                    data = await Task.Run(() => dataHelper.SearchByUser(LocalUser.UserId, searchItem));
-                }
+                    ? await Task.Run(() => userDataHelper.SearchAll(searchItem))
+                    : await Task.Run(() => userDataHelper.SearchByUser(LocalUser.UserId, searchItem));
 
-                // Fill DataGridView
-                dataGridView1.DataSource = data.ToList();
+                labelNoOfItems.Text = users.Count.ToString();
 
-                // Set Columns Title
-                // SetColumns();
+                comboBoxNoOfPage.Items.Clear();
+                int totalPages = (int)Math.Ceiling((double)users.Count / pageSize);
 
-                // Show Empty Data
+                dataGridView1.DataSource = users
+                    .Take(pageSize)
+                    .ToList();
+
+                columnsSet = false;
+                SetColumns();
+
+
+                for (int i = 0; i < totalPages; i++)
+                    comboBoxNoOfPage.Items.Add(i);
+
+                comboBoxNoOfPage.SelectedIndex = totalPages > 0 ? 0 : -1;
+
                 ShowEmptyDataState();
-
-                // Clear Data
-                data.Clear();
-                LoadingForm.Instance(_main).Hide();
+                
             }
-            else
+            finally
             {
-                // No Conection
-                LoadingForm.Instance(_main).Hide();
-                ShowServerErrorState();
-                MsgHelper.ShowServerError();
+                // Hide Loading
+                LoadingForm.Instance(_mainForm).Hide();
             }
-            // Hide Loading
-            LoadingForm.Instance(_main).Hide();
         }
 
         private void ShowEmptyDataState()
@@ -377,6 +317,9 @@ namespace HyperEmpoloyees.Gui.UsersGui
 
         private void SetColumns()
         {
+            if (columnsSet) return;
+            if (dataGridView1.Columns.Count < 12) return;
+
             dataGridView1.Columns[0].HeaderCell.Value = "Id";
             dataGridView1.Columns[1].HeaderCell.Value = "Полное имя";
             dataGridView1.Columns[2].HeaderCell.Value = "Имя пользователя";
@@ -394,9 +337,11 @@ namespace HyperEmpoloyees.Gui.UsersGui
             dataGridView1.Columns[3].Visible = false;
             dataGridView1.Columns[5].Visible = false;
             dataGridView1.Columns[6].Visible = false;
+
+            columnsSet = true;
         }
 
-        private void Edit()
+        private void EditUser()
         {
             // Check Data if not Empty
             if (!dgvHelper.IsEmpty(dataGridView1))
@@ -405,7 +350,7 @@ namespace HyperEmpoloyees.Gui.UsersGui
                 int Id = Convert.ToInt32(dataGridView1.CurrentRow.Cells[0].Value);
                 if (addUserForm == null || addUserForm.IsDisposed)
                 {
-                    addUserForm = new AddUserForm(_main, Id, this);
+                    addUserForm = new AddUserForm(_mainForm, Id, this);
                     addUserForm.Show();
                 }
                 else
@@ -421,17 +366,17 @@ namespace HyperEmpoloyees.Gui.UsersGui
 
         private void SetIdDeleteList()
         {
-            IdDeleteList.Clear();
+            deleteIds.Clear();
             foreach (DataGridViewRow row in dataGridView1.Rows)
             {
                 if (row.Selected)
                 {
-                    IdDeleteList.Add(Convert.ToInt32(row.Cells[0].Value));
+                    deleteIds.Add(Convert.ToInt32(row.Cells[0].Value));
                 }
             }
         }
 
-        private void ExportExcel(List<Users> data)
+        private void ExportExcel(List<User> data)
         {
             // Define Data Table
             DataTable dataTable = new DataTable();
@@ -443,13 +388,13 @@ namespace HyperEmpoloyees.Gui.UsersGui
             }
 
             // Re-Set DataTable
-            dataTable = arrangedDataTable(dataTable);
+            dataTable = ArrangeDataTable(dataTable);
 
             // Send to export
             ExcelHelper.Export(dataTable, "Users");
         }
 
-        private DataTable arrangedDataTable(DataTable dataTable)
+        private DataTable ArrangeDataTable(DataTable dataTable)
         {
             dataTable.Columns["Id"].SetOrdinal(0);
             dataTable.Columns["Id"].ColumnName = "Id";
@@ -463,7 +408,7 @@ namespace HyperEmpoloyees.Gui.UsersGui
 
 
             dataTable.Columns["Password"].SetOrdinal(3);
-            dataTable.Columns["Password"].ColumnName = "Пароль";
+            dataTable.Columns["Password"].Expression = "'******'";
 
             dataTable.Columns["Role"].SetOrdinal(4);
             dataTable.Columns["Role"].ColumnName = "Общая действительность";
@@ -500,6 +445,18 @@ namespace HyperEmpoloyees.Gui.UsersGui
 
             return dataTable;
         }
+
+        private void Initialize(Main main)
+        {
+            _mainForm = main;
+
+            // check data
+            if (!DesignMode && IsHandleCreated)
+            {
+                _ = LoadDataAsync();
+            }
+        }
+
         #endregion
 
 

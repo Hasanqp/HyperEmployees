@@ -1,25 +1,17 @@
 ﻿using HyperEmpoloyees.Data.EF;
 using HyperEmpoloyees.Gui.UsersGui;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace HyperEmpoloyees
 {
     partial class StartForm : Form
     {
-        private DBContext db;
+        private HyperEmpoloyeesDbContext db;
         public StartForm()
         {
             InitializeComponent();
             Code.Helpers.ConStringHelper.SetConString();
         }
-        #region Evints
+        #region Events
         private void linkLabelSetServer_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             // Show Settings Form
@@ -35,13 +27,13 @@ namespace HyperEmpoloyees
 
         private async void timerStart_Tick(object sender, EventArgs e)
         {
-            db = new DBContext();
+            db = new HyperEmpoloyeesDbContext();
 
             // Check the con
             labelState.Text = "Подключение к базе данных";
             if (await db.Database.CanConnectAsync())
             {
-                // Show login Form
+                // Show Login From
                 timerStart.Enabled = false;
                 LoginForm loginForm = new LoginForm();
                 loginForm.Show();
@@ -52,11 +44,6 @@ namespace HyperEmpoloyees
                 panelSettings.Visible = true;
                 labelState.Text = "Не удалось подключиться... Мы вернемся через некоторое время";
             }
-        }
-
-        private void StartForm_Load(object sender, EventArgs e)
-        {
-
         }
     }
 }

@@ -23,7 +23,7 @@ namespace HyperEmpoloyees.Code.Helpers
                 string user = Properties.Settings.Default.UserName;
                 string password = Properties.Settings.Default.Password;
                 string druation = Properties.Settings.Default.ConDuration.ToString();
-                HyperEmpoloyees.Data.ConString.ConStringValue = $"Server=WIN-FKUQ8A2A5DL{server};Database={db};User Id= {user};Password={password};Encrypt=false;Timeout={druation};";
+                HyperEmpoloyees.Data.ConString.ConStringValue = $"Server={server};Database={db};User Id= {user};Password={password};Encrypt=false;Timeout={druation};";
             }
         }
     }

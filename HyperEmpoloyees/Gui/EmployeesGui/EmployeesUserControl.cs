@@ -5,50 +5,50 @@ using HyperEmpoloyees.Data.EF;
 using HyperEmpoloyees.Gui.LoadingGui;
 using System.Data;
 
-namespace HyperEmpoloyees.Gui.SalaryRateGui
+namespace HyperEmpoloyees.Gui.EmpoloyeesGui
 {
-    public partial class SalaryRateUserControl : UserControl
+    public partial class EmployeesUserControl : UserControl
     {
-        private static SalaryRateUserControl? salaryRateUserControl;
-        private AddSalaryRateForm addSalaryRateForm;
+        private static EmployeesUserControl? employeesUserControl;
+        private AddEmployeesForm addEmployeesForm;
         private static Main mainForm;
-        private IDataHelper<Core.SalaryRate> dataHelper;
-        private List<Core.SalaryRate> data;
-        private List<int> IdDeleteList;
+        private IDataHelper<Core.Employee> employeeDataHelper;
+        private List<Core.Employee> employees;
+        private List<int> deleteIds;
 
-        public SalaryRateUserControl()
+        public EmployeesUserControl()
         {
             InitializeComponent();
-            dataHelper = new SalaryRateRepository();
-            data = new List<SalaryRate>();
-            IdDeleteList = new List<int>();
+            employeeDataHelper = new EmployeeRepository();
+            employees = new List<Employee>();
+            deleteIds = new List<int>();
             LoadData();
         }
 
-        public static SalaryRateUserControl Instance(Main main)
+        public static EmployeesUserControl Instance(Main main)
         {
             mainForm = main;
-            return salaryRateUserControl ?? (salaryRateUserControl = new SalaryRateUserControl());
+            return employeesUserControl ?? (employeesUserControl = new EmployeesUserControl());
         }
 
-        #region Evints
-        private void buttonAdd_Click(object sender, EventArgs e)
+        #region Events
+        public void buttonAdd_Click(object sender, EventArgs e)
         {
-            if (addSalaryRateForm == null || addSalaryRateForm.IsDisposed)
+            if (addEmployeesForm == null || addEmployeesForm.IsDisposed)
             {
-                addSalaryRateForm = new AddSalaryRateForm(mainForm, 0, this);
-                addSalaryRateForm.Show();
+                addEmployeesForm = new AddEmployeesForm(mainForm, 0, this);
+                addEmployeesForm.Show();
             }
             else
             {
-                addSalaryRateForm.Focus();
+                addEmployeesForm.Focus();
             }
 
         }
 
         private void buttonEdit_Click(object sender, EventArgs e)
         {
-            Edit();
+            EditEmployee();
         }
 
         private async void buttonDelete_Click(object sender, EventArgs e)
@@ -61,19 +61,19 @@ namespace HyperEmpoloyees.Gui.SalaryRateGui
 
                     // Get Id
                     SetIdDeleteList();
-                    if (IdDeleteList.Count > 0)
+                    if (deleteIds.Count > 0)
                     {
                         if (MsgHelper.ShowDeleteDialog())
                         {
                             LoadingForm.Instance(mainForm).Show();
-                            if (await Task.Run(() => dataHelper.IsCanConnect()))
+                            if (await Task.Run(() => employeeDataHelper.IsCanConnect()))
                             {
                                 // Loop into Id List
-                                foreach (int Id in IdDeleteList)
+                                foreach (int Id in deleteIds)
                                 {
-                                    await Task.Run(() => dataHelper.Delete(Id));
-                                    SystemRecordHelper.Add("Удаление функциональной оценки",
-                                        $"Функциональная оценка, содержащая идентификационный номер, была удалена{Id.ToString()}");
+                                    await Task.Run(() => employeeDataHelper.Delete(Id));
+                                    SystemRecordHelper.Add("Удалить сотрудника",
+                                        $"Текущий сотрудник с идентификационным номером был удален {Id.ToString()}");
                                 }
 
                                 ToastHelper.ShowDeleteToast();
@@ -117,37 +117,28 @@ namespace HyperEmpoloyees.Gui.SalaryRateGui
             }
         }
 
-        private void buttonRefresh_Click(object sender, EventArgs e)
+        private async void buttonRefresh_Click(object sender, EventArgs e)
         {
-            LoadData();
+            await LoadData();
         }
 
         private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            Edit();
+            EditEmployee();
         }
 
         private async void buttonExportAll_Click(object sender, EventArgs e)
         {
             // Show Loading
             LoadingForm.Instance(mainForm).Show();
-            if (await Task.Run(() => dataHelper.IsCanConnect()))
+            if (await Task.Run(() => employeeDataHelper.IsCanConnect()))
             {
                 // Start Load Data
                 // Check if Admin or not
-                if (LocalUser.Role == "Admin")
-                {
-                    // Get All Data
-                    data = await Task.Run(() => dataHelper.GetDataByUser(LocalUser.UserId));
-                }
-                else
-                {
-                    // Get Data By User
-                    data = await Task.Run(() => dataHelper.GetDataByUser(LocalUser.UserId));
-                }
+                employees = await LoadEmployees();
                 LoadingForm.Instance(mainForm).Hide();
 
-                ExportExcel(data);
+                ExportExcel(employees);
             }
             else
             {
@@ -163,11 +154,11 @@ namespace HyperEmpoloyees.Gui.SalaryRateGui
         private void buttonExportDataGridView_Click(object sender, EventArgs e)
         {
             // Get Data
-            var data = (List<SalaryRate>)dataGridView1.DataSource;
+            var data = (List<Employee>)dataGridView1.DataSource;
             ExportExcel(data);
         }
 
-        private void ExportExcel(List<SalaryRate> data)
+        private void ExportExcel(List<Employee> data)
         {
             // Define Data Table
             DataTable dataTable = new DataTable();
@@ -179,10 +170,10 @@ namespace HyperEmpoloyees.Gui.SalaryRateGui
             }
 
             // Re-Set DataTable
-            dataTable = arrangedDataTable(dataTable);
+            dataTable = ArrangeDataTable(dataTable);
 
             // Send to export
-            ExcelHelper.Export(dataTable, "SalaryRate");
+            ExcelHelper.Export(dataTable, "Employees");
         }
 
         private void buttonNext_Click(object sender, EventArgs e)
@@ -213,36 +204,28 @@ namespace HyperEmpoloyees.Gui.SalaryRateGui
             {
                 // Show Loading
                 LoadingForm.Instance(mainForm).Show();
-                if (await Task.Run(() => dataHelper.IsCanConnect()))
+                if (await Task.Run(() => employeeDataHelper.IsCanConnect()))
                 {
                     // Start Load Data
                     // Check if Admin or not
-                    if (LocalUser.Role == "Admin")
-                    {
-                        // Get All Data
-                        data = await Task.Run(() => dataHelper.GetDataByUser(LocalUser.UserId));
-                    }
-                    else
-                    {
-                        // Get Data By User
-                        data = await Task.Run(() => dataHelper.GetDataByUser(LocalUser.UserId));
-                    }
+                    employees = await LoadEmployees();
+
                     // No Of all items in db
-                    labelNoOfItems.Text = data.Count.ToString();
+                    labelNoOfItems.Text = employees.Count.ToString();
                     // Get And set parameters
-                    var idlist = data.Select(x => x.Id).ToArray();
+                    var idlist = employees.Select(x => x.Id).ToArray();
                     int index = comboBoxNoOfPage.SelectedIndex;
                     int noOfItemIndex = index * Properties.Settings.Default.NoDataGridViewItems;
 
                     // Fill DataGridView
-                    dataGridView1.DataSource = data.Where(x => x.Id <= idlist[noOfItemIndex])
+                    dataGridView1.DataSource = employees.Where(x => x.Id <= idlist[noOfItemIndex])
                         .Take(Properties.Settings.Default.NoDataGridViewItems).ToList();
 
                     // Show Empty Data
                     ShowEmptyDataState();
 
                     // Clear Data
-                    data.Clear();
+                    employees.Clear();
                     LoadingForm.Instance(mainForm).Hide();
                 }
                 else
@@ -263,30 +246,21 @@ namespace HyperEmpoloyees.Gui.SalaryRateGui
         #endregion
 
         #region Methods
-        public async void LoadData()
+        public async Task LoadData()
         {
             // Show Loading
             LoadingForm.Instance(mainForm).Show();
-            if (await Task.Run(() => dataHelper.IsCanConnect()))
+            if (await Task.Run(() => employeeDataHelper.IsCanConnect()))
             {
                 // Start Load Data
                 // Check if Admin or not
-                if (LocalUser.Role == "Admin")
-                {
-                    // Get All Data
-                    data = await Task.Run(() => dataHelper.GetDataByUser(LocalUser.UserId));
-                }
-                else
-                {
-                    // Get Data By User
-                    data = await Task.Run(() => dataHelper.GetDataByUser(LocalUser.UserId));
-                }
+                employees = await LoadEmployees();
 
                 // No Of all items in db
-                labelNoOfItems.Text = data.Count.ToString();
+                labelNoOfItems.Text = employees.Count.ToString();
                 // Fill DataGridView
-                dataGridView1.DataSource = data.Take(Properties.Settings.Default.NoDataGridViewItems).ToList();
-                if (data.Count <= Properties.Settings.Default.NoDataGridViewItems)
+                dataGridView1.DataSource = employees.Take(Properties.Settings.Default.NoDataGridViewItems).ToList();
+                if (employees.Count <= Properties.Settings.Default.NoDataGridViewItems)
                 {
                     comboBoxNoOfPage.Items.Clear();
                     comboBoxNoOfPage.Items.Add(0);
@@ -294,7 +268,7 @@ namespace HyperEmpoloyees.Gui.SalaryRateGui
                 else
                 {
                     // Get And Add No Of Pages
-                    double value = Convert.ToDouble(data.Count) / Convert.ToDouble(Properties.Settings.Default.NoDataGridViewItems);
+                    double value = Convert.ToDouble(employees.Count) / Convert.ToDouble(Properties.Settings.Default.NoDataGridViewItems);
                     int noOfPage = Convert.ToInt32(Math.Round(value, MidpointRounding.AwayFromZero));
                     comboBoxNoOfPage.Items.Clear();
                     for (int i = 0; i <= noOfPage; i++)
@@ -310,7 +284,7 @@ namespace HyperEmpoloyees.Gui.SalaryRateGui
                 ShowEmptyDataState();
 
                 // Clear Data
-                data.Clear();
+                employees.Clear();
                 LoadingForm.Instance(mainForm).Hide();
             }
             else
@@ -324,28 +298,21 @@ namespace HyperEmpoloyees.Gui.SalaryRateGui
             LoadingForm.Instance(mainForm).Hide();
         }
 
-        public async void Search()
+        public async Task Search()
         {
             // Show Loading
             LoadingForm.Instance(mainForm).Show();
-            if (await Task.Run(() => dataHelper.IsCanConnect()))
+            if (await Task.Run(() => employeeDataHelper.IsCanConnect()))
             {
                 // Start Load Data
                 string searchItem = textBoxSearch.Text;
                 // Check if Admin or not
-                if (LocalUser.Role == "Admin")
-                {
-                    // Get All Data
-                    data = await Task.Run(() => dataHelper.SearchByUser(LocalUser.UserId, searchItem));
-                }
-                else
-                {
-                    // Get Data By User
-                    data = await Task.Run(() => dataHelper.SearchByUser(LocalUser.UserId, searchItem));
-                }
+                employees = await Task.Run(() =>
+                employeeDataHelper.GetDataByUser(LocalUser.UserId));
+
 
                 // Fill DataGridView
-                dataGridView1.DataSource = data.ToList();
+                dataGridView1.DataSource = employees.ToList();
 
                 // Set Columns Title
                 // SetColumns();
@@ -354,7 +321,7 @@ namespace HyperEmpoloyees.Gui.SalaryRateGui
                 ShowEmptyDataState();
 
                 // Clear Data
-                data.Clear();
+                employees.Clear();
                 LoadingForm.Instance(mainForm).Hide();
             }
             else
@@ -389,30 +356,44 @@ namespace HyperEmpoloyees.Gui.SalaryRateGui
         private void SetColumns()
         {
             dataGridView1.Columns[0].HeaderCell.Value = "Id";
-            dataGridView1.Columns[1].HeaderCell.Value = "Функциональная оценка";
-            dataGridView1.Columns[2].HeaderCell.Value = "Зарплата";
-            dataGridView1.Columns[3].HeaderCell.Value = "Ежегодное пособие";
-            dataGridView1.Columns[4].HeaderCell.Value = "Годы продвижения по службе";
+            dataGridView1.Columns[1].HeaderCell.Value = "Полное имя";
+            dataGridView1.Columns[1].Width = 150;
+            dataGridView1.Columns[2].HeaderCell.Value = "Должность";
+            dataGridView1.Columns[3].HeaderCell.Value = "Статус";
+            dataGridView1.Columns[4].Visible = false;
+
+            dataGridView1.Columns[5].HeaderCell.Value = "Текущая оценка";
+            dataGridView1.Columns[6].HeaderCell.Value = "Текущий этап";
+            dataGridView1.Columns[7].HeaderCell.Value = "Текущая заработная плата";
+             dataGridView1.Columns[8].HeaderCell.Value = "Текущая история";
+
+             dataGridView1.Columns[9].HeaderCell.Value = "Следующая степень";
+            dataGridView1.Columns[10].HeaderCell.Value = "Следующий этап";
+            dataGridView1.Columns[11].HeaderCell.Value = "Следующая зарплата";
+            dataGridView1.Columns[12].HeaderCell.Value = "Следующая дата";
 
             // Visible Of Columns
-            dataGridView1.Columns[5].Visible = false;
+            dataGridView1.Columns[13].Visible = false;
+            dataGridView1.Columns[14].Visible = false;
+            dataGridView1.Columns[15].Visible = false;
+            dataGridView1.Columns[16].Visible = false;
         }
 
-        private void Edit()
+        private void EditEmployee()
         {
             // Check Data if not Empty
-            if (!dgvHelper.IsEmpty(dataGridView1) && dataGridView1.CurrentRow.Selected == true)
+            if (!dgvHelper.IsEmpty(dataGridView1))
             {
                 // Get Id
                 int Id = Convert.ToInt32(dataGridView1.CurrentRow.Cells[0].Value);
-                if (addSalaryRateForm == null || addSalaryRateForm.IsDisposed)
+                if (addEmployeesForm == null || addEmployeesForm.IsDisposed)
                 {
-                    addSalaryRateForm = new AddSalaryRateForm(mainForm, Id, this);
-                    addSalaryRateForm.Show();
+                    addEmployeesForm = new AddEmployeesForm(mainForm, Id, this);
+                    addEmployeesForm.Show();
                 }
                 else
                 {
-                    addSalaryRateForm.Focus();
+                    addEmployeesForm.Focus();
                 }
             }
             else
@@ -423,17 +404,17 @@ namespace HyperEmpoloyees.Gui.SalaryRateGui
 
         private void SetIdDeleteList()
         {
-            IdDeleteList.Clear();
+            deleteIds.Clear();
             foreach (DataGridViewRow row in dataGridView1.Rows)
             {
                 if (row.Selected)
                 {
-                    IdDeleteList.Add(Convert.ToInt32(row.Cells[0].Value));
+                    deleteIds.Add(Convert.ToInt32(row.Cells[0].Value));
                 }
             }
         }
 
-        private DataTable arrangedDataTable(DataTable dataTable)
+        private DataTable ArrangeDataTable(DataTable dataTable)
         {
             dataTable.Columns["Id"].SetOrdinal(0);
             dataTable.Columns["Id"].ColumnName = "Id";
@@ -455,8 +436,14 @@ namespace HyperEmpoloyees.Gui.SalaryRateGui
 
             return dataTable;
         }
+
+        private async Task<List<Employee>> LoadEmployees()
+        {
+            if (LocalUser.Role == "Admin")
+                return await Task.Run(() => employeeDataHelper.GetDataByUser(LocalUser.UserId));
+
+            return await Task.Run(() => employeeDataHelper.GetDataByUser(LocalUser.UserId));
+        }
         #endregion
-
-
     }
 }

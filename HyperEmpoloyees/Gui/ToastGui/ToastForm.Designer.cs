@@ -90,7 +90,6 @@
             StartPosition = FormStartPosition.Manual;
             Text = "Toast";
             TopMost = true;
-            Activated += ToastForm_Activated;
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             ResumeLayout(false);
         }

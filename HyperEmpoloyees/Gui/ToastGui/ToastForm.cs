@@ -1,45 +1,45 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
-namespace HyperEmpoloyees.Gui.ToastGui
+﻿namespace HyperEmpoloyees.Gui.ToastGui
 {
     public partial class ToastForm : Form
     {
         private static ToastForm? toastForm;
-        public static string Title;
-        public static string Description;
-        public static bool TimerState;
+        private string _title;
+        private string _description;
         public ToastForm()
         {
             InitializeComponent();
         }
-
-        public static ToastForm Instance(string title, string descrioption)
-        {
-            Title = title;
-            Description = descrioption;
-            return toastForm ?? (toastForm = new ToastForm());
-        }
-
+        #region events
         private void timerToast_Tick(object sender, EventArgs e)
         {
             this.Hide();
             timerToast.Enabled = false;
         }
-
-        private void ToastForm_Activated(object sender, EventArgs e)
+        #endregion
+        #region Methods
+        public static ToastForm Instance(string title, string description)
         {
-            labelTitle.Text = Title;
-            labelDescription.Text = Description;
-            timerToast.Interval = Properties.Settings.Default.ToastDuration;
-            timerToast.Enabled = true;
+            if (toastForm == null || toastForm.IsDisposed)
+            {
+                toastForm = new ToastForm();
+            }
+
+            toastForm.SetData(title, description);
+            return toastForm;
         }
+
+        private void SetData(string title, string description)
+        {
+            _title = title;
+            _description = description;
+
+            labelTitle.Text = _title;
+            labelDescription.Text = _description;
+
+            timerToast.Stop();
+            timerToast.Interval = Properties.Settings.Default.ToastDuration;
+            timerToast.Start();
+        }
+        #endregion
     }
 }

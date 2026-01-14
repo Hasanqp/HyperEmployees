@@ -13,17 +13,17 @@ namespace HyperEmpoloyees.Gui.LoadingGui
     public partial class LoadingForm : Form
     {
         private static LoadingForm? loadingForm;
-        private static Main _main;
+        private static Main mainForm;
 
         public LoadingForm()
         {
             InitializeComponent();
-            this.Owner = _main;
+            this.Owner = mainForm;
         }
 
         public static LoadingForm Instance(Main main)
         {
-            _main = main;
+            mainForm = main;
             return loadingForm ?? (loadingForm = new LoadingForm());
         }
     }

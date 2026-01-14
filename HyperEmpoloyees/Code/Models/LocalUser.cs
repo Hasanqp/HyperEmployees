@@ -23,7 +23,7 @@ namespace HyperEmpoloyees.Code.Models
         public static DateTime EditedDate { get; set; }
 
         // Navigations
-        public static List<Roles> Roles { get; set; }
-        public static List<SystemRecords> SystemRecords { get; set; }
+        public static List<Role> Roles { get; set; }
+        public static List<SystemRecord> SystemRecords { get; set; }
     }
 }

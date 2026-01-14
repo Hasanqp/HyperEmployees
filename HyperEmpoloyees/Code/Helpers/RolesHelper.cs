@@ -9,6 +9,6 @@ namespace HyperEmpoloyees.Code.Helpers
 {
     public static class RolesHelper
     {
-        public static List<Roles> localRoles {  get; set; }
+        public static List<Role> localRoles {  get; set; }
     }
 }

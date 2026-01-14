@@ -11,7 +11,7 @@ namespace HyperEmpoloyees.Core
         public int Id { get; set; }
         public int Degree { get; set; }
         public float Salary { get; set; }
-        public float BounsYearRate { get; set; }
+        public float BonusYearRate { get; set; }
         public int PromotionYear { get; set; }
 
         public string UsersId { get; set; }

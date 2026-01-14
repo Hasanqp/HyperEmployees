@@ -1,42 +1,30 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
-using HyperEmpoloyees.Code.Helpers;
+﻿using HyperEmpoloyees.Code.Helpers;
 using HyperEmpoloyees.Code.Models;
 using HyperEmpoloyees.Core;
 using HyperEmpoloyees.Data.EF;
-using HyperEmpoloyees.Gui.LoadingGui;
-using Microsoft.VisualBasic.ApplicationServices;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace HyperEmpoloyees.Gui.UsersGui
 {
     public partial class LoginForm : Form
     {
-        private readonly IDataHelper<Core.Users> dataHelperForUser;
-        private readonly IDataHelper<Roles> dataHelperForRoles;
-        private readonly IDataHelper<SystemRecords> dataHelperForSystemRecords;
-        Main main;
+        private readonly IDataHelper<Core.User> userDataHelper;
+        private readonly IDataHelper<Role> rolesDataHelper;
+        private readonly IDataHelper<SystemRecord> systemRecordsDataHelper;
+        Main mainForm;
 
         public LoginForm()
         {
             InitializeComponent();
 
-            dataHelperForUser = new UsersEF();
-            dataHelperForRoles = new RolesEF();
-            dataHelperForSystemRecords = new SystemRecordsEF();
+            userDataHelper = new UserRepository();
+            rolesDataHelper = new RoleRepository();
+            systemRecordsDataHelper = new SystemRecordRepository();
 
 
         }
 
-        #region Evints
+        #region Events
         private async void buttonLogin_Click(object sender, EventArgs e)
         {
             // Check the fileds
@@ -44,21 +32,13 @@ namespace HyperEmpoloyees.Gui.UsersGui
             {
                 MsgHelper.ShowRequiredFields();
             }
-            else
+            pictureBoxLoading.Visible = true;
+            try
             {
-                // Show Loading
-                pictureBoxLoading.Visible = true;
-                // Check Connection
-                if (await Task.Run(() => dataHelperForUser.IsCanConnect()))
-                {
-                    Login();
-                }
-                else
-                {
-                    pictureBoxLoading.Visible = false;
-                    MsgHelper.ShowServerError();
-                }
-
+                await LoginAsync();
+            }
+            finally
+            {
                 pictureBoxLoading.Visible = false;
             }
         }
@@ -78,52 +58,67 @@ namespace HyperEmpoloyees.Gui.UsersGui
             }
         }
 
-        private async void Login()
+        private async Task LoginAsync()
         {
             // Check user Name and Password
             string userName = textBoxUserName.Text,
                    password = textBoxPassword.Text;
             var user = await Task.Run(() =>
-            dataHelperForUser.GetAllData()
-            .Where(x => x.UserName == userName && x.Password == password)
-            .FirstOrDefault() ?? new Core.Users());
-            if (user.Id > 0)
+            userDataHelper.GetAllData()
+            .FirstOrDefault(x => x.UserName == userName && x.Password == password)
+            ) ?? new Core.User();
+
+            if (user.Id <= 0)
             {
-                // Set User Information
-                LocalUser.Id = user.Id;
-                LocalUser.UserName = user.UserName;
-                LocalUser.Password = user.Password;
-                LocalUser.Address = user.Address;
-                LocalUser.UserId = user.UserId;
-                LocalUser.FullName = user.FullName;
-                LocalUser.Email = user.Email;
-                LocalUser.IsSecondaryUser = user.IsSecondaryUser;
-
-                // Get and Set roles
-                RolesHelper.localRoles = await Task.Run(() => dataHelperForRoles
-                .GetAllData()
-                .Where(x => x.UsersId == user.Id).ToList());
-
-                // Success
-                SystemRecordHelper.Add("Регистрироваться",
-                    $"Регистрироваться. Пользователь {user.FullName} вошел в систему ");
-
-                Main main = new Main();
-                main.Show();
-                this.Hide();
-
+                MessageBox.Show(
+                    "Неверная информация для входа в систему",
+                    "Ошибка входа в систему",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                    );
+                return;
             }
-            else
+
+            // Set Local User
+            LocalUser.Id = user.Id;
+            LocalUser.UserName = user.UserName;
+            LocalUser.Password = user.Password;
+            LocalUser.Address = user.Address;
+            LocalUser.UserId = user.UserId;
+            LocalUser.FullName = user.FullName;
+            LocalUser.Email = user.Email;
+            LocalUser.IsSecondaryUser = user.IsSecondaryUser;
+            LocalUser.Role = user.Role;
+
+            // Load roles
+            RolesHelper.localRoles = await Task.Run(() =>
+                rolesDataHelper.GetAllData()
+                    .Where(x => x.UsersId == user.Id)
+                    .ToList()
+            );
+
+            if (RolesHelper.localRoles.Count == 0)
             {
-                // Msg Box with result
-                MessageBox.Show("Неверная информация для входа в систему", "Ошибка входа в систему", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MsgHelper.ShowServerError();
+                return;
             }
+
+            // System record
+            SystemRecordHelper.Add(
+                "Регистрироваться",
+                $"Пользователь {user.FullName} вошел в систему"
+            );
+
+            Main main = new Main();
+            main.Show();
+            this.Hide();
         }
 
         private void LoginForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             Application.Exit();
         }
+
         #endregion
     }
 }

@@ -9,26 +9,26 @@ namespace HyperEmpoloyees.Gui.SalaryRateGui
 {
     public partial class AddSalaryRateForm : Form
     {
-        private readonly IDataHelper<SalaryRate> dataHelperForSalary;
-        private readonly IDataHelper<SystemRecords> dataHelperForSystemRecords;
-        private readonly Main main;
-        private int Id;
+        private readonly IDataHelper<SalaryRate> salaryDataHelper;
+        private readonly IDataHelper<SystemRecord> systemRecordDataHelper;
+        private readonly Main mainForm;
+        private int salaryId;
         private DateTime userCreatedDate;
-        private readonly SalaryRateUserControl page;
+        private readonly SalaryRateUserControl parentPage;
 
-        public AddSalaryRateForm(Main main, int id, SalaryRateUserControl page)
+        public AddSalaryRateForm(Main mainForm, int salaryId, SalaryRateUserControl parentPage)
         {
             InitializeComponent();
 
-            dataHelperForSalary = new SalaryRateEF();
-            dataHelperForSystemRecords = new SystemRecordsEF();
+            salaryDataHelper = new SalaryRateRepository();
+            systemRecordDataHelper = new SystemRecordRepository();
 
-            this.Owner = main;
-            this.main = main;
-            this.Id = id;
-            this.page = page;
+            this.Owner = mainForm;
+            this.mainForm = mainForm;
+            this.salaryId = salaryId;
+            this.parentPage = parentPage;
 
-            if (Id > 0)
+            if (this.salaryId > 0)
             {
                 SetDataForEdit();
             }
@@ -49,141 +49,50 @@ namespace HyperEmpoloyees.Gui.SalaryRateGui
             else
             {
                 // Show Loading
-                LoadingForm.Instance(main).Show();
+                LoadingForm.Instance(mainForm).Show();
                 // Check Connection
-                if (await Task.Run(() => dataHelperForSalary.IsCanConnect()))
+                if (await Task.Run(() => salaryDataHelper.IsCanConnect()))
                 {
                     // Check Duplicated Item
 
                     int degree = (int)numericUpDownDegree.Value;
 
-                    var result = await Task.Run(() => dataHelperForSalary
+                    var result = await Task.Run(() => salaryDataHelper
                     .GetDataByUser(LocalUser.UserId)
-                    .Where(x => x.Id != Id)
+                    .Where(x => x.Id != salaryId)
                     .Where(x => x.Degree == degree)
                     .FirstOrDefault() ?? new SalaryRate());
 
                     if (result.Id > 0)
                     {
                         // Msg for Duplicatad data
-                        LoadingForm.Instance(main).Show();
+                        LoadingForm.Instance(mainForm).Show();
                         MsgHelper.ShowDuplicatedItems();
                     }
                     else
                     {
                         // Add
-                        if (Id == 0)
+                        if (salaryId == 0)
                         {
-                            Add();
+                            AddSalary();
                         }
                         else
                         {
                             // Edit
-                            Edit();
+                            EditSalary();
                         }
                     }
                 }
                 else
                 {
-                    LoadingForm.Instance(main).Show();
+                    LoadingForm.Instance(mainForm).Show();
                     MsgHelper.ShowServerError();
                 }
 
-                LoadingForm.Instance(main).Hide();
+                LoadingForm.Instance(mainForm).Hide();
             }
 
         }
-
-        #endregion
-        #region Methods
-        private bool IsValid()
-        {
-            if (numericUpDownDegree.Value>=0
-                )
-            {
-                return true;
-            }
-            else
-            {
-                return true;
-            }
-        }
-
-        private async void Add()
-        {
-            // Set Salary
-            SalaryRate salaryRate = new SalaryRate
-            {
-                Degree= (int)numericUpDownDegree.Value,
-                PromotionYear= (int)numericUpDownPromtion.Value,
-                Salary= (float)Convert.ToDecimal(textBoxSalary.Text),
-                BounsYearRate= (float)Convert.ToDecimal(textBoxBouncYear.Text),
-                UsersId = LocalUser.UserId,
-            };
-
-            // Send Data to data base
-            var result = await Task.Run(() => dataHelperForSalary.Add(salaryRate));
-            if (result == "1")
-            {
-
-                // Success
-                SystemRecordHelper.Add("Добавить Функциональная оценка",
-                    $"Была добавлена функциональная оценка, которая содержит идентификационный номер {salaryRate.Id}");
-                page.LoadData();
-                ToastHelper.ShowAddToast();
-            }
-            else
-            {
-                // Msg Box with result
-                MessageBox.Show(result);
-            }
-        }
-
-        private async void Edit()
-        {
-            // Set Salary
-            SalaryRate salaryRate = new SalaryRate
-            {
-                Degree = (int)numericUpDownDegree.Value,
-                PromotionYear = (int)numericUpDownPromtion.Value,
-                Salary = (float)Convert.ToDecimal(textBoxSalary.Text),
-                BounsYearRate = (float)Convert.ToDecimal(textBoxBouncYear.Text),
-                UsersId = LocalUser.UserId,
-                Id=Id
-            };
-
-            // Send Data to data base
-            var result = await Task.Run(() => dataHelperForSalary.Edit(salaryRate));
-            if (result == "1")
-            {
-                // Success
-                SystemRecordHelper.Add("Изменение функциональной оценки.",
-                    $"Была изменена функциональная оценка, которая соответствует идентификационному номеру {salaryRate.Id}");
-                page.LoadData();
-                ToastHelper.ShowEditToast();
-                this.Close();
-            }
-            else
-            {
-                // Msg Box with result
-                MessageBox.Show(result);
-            }
-        }
-
-        private async void SetDataForEdit()
-        {
-            // Get Edit Salary Data
-            var _salary = await Task.Run(() => dataHelperForSalary.Find(Id));
-            if (_salary != null)
-            {
-                textBoxSalary.Text = _salary.Salary.ToString();
-                textBoxBouncYear.Text = _salary.BounsYearRate.ToString();
-                numericUpDownDegree.Value = _salary.Degree;
-                numericUpDownPromtion.Value = _salary.PromotionYear;
-            }
-        }
-
-        #endregion
 
         private void textBoxSalary_MouseLeave(object sender, EventArgs e)
         {
@@ -202,5 +111,91 @@ namespace HyperEmpoloyees.Gui.SalaryRateGui
                 MsgHelper.ShowNumberVaild();
             }
         }
+        #endregion
+        #region Methods
+        private bool IsValid()
+        {
+            return
+                numericUpDownDegree.Value > 0 &&
+                numericUpDownPromtion.Value >= 0 &&
+                float.TryParse(textBoxSalary.Text, out var salary) && salary >= 0 &&
+                float.TryParse(textBoxBouncYear.Text, out var bonus) && bonus >= 0;
+        }
+
+        private async void AddSalary()
+        {
+            // Set Salary
+            SalaryRate salaryRate = new SalaryRate
+            {
+                Degree= (int)numericUpDownDegree.Value,
+                PromotionYear= (int)numericUpDownPromtion.Value,
+                Salary= (float)Convert.ToDecimal(textBoxSalary.Text),
+                BonusYearRate= (float)Convert.ToDecimal(textBoxBouncYear.Text),
+                UsersId = LocalUser.UserId,
+            };
+
+            // Send Data to data base
+            var result = await Task.Run(() => salaryDataHelper.Add(salaryRate));
+            if (result == "1")
+            {
+
+                // Success
+                SystemRecordHelper.Add("Добавить Функциональная оценка",
+                    $"Была добавлена функциональная оценка, которая содержит идентификационный номер {salaryRate.Id}");
+                parentPage.LoadData();
+                ToastHelper.ShowAddToast();
+            }
+            else
+            {
+                // Msg Box with result
+                MessageBox.Show(result);
+            }
+        }
+
+        private async void EditSalary()
+        {
+            // Set Salary
+            SalaryRate salaryRate = new SalaryRate
+            {
+                Degree = (int)numericUpDownDegree.Value,
+                PromotionYear = (int)numericUpDownPromtion.Value,
+                Salary = (float)Convert.ToDecimal(textBoxSalary.Text),
+                BonusYearRate = (float)Convert.ToDecimal(textBoxBouncYear.Text),
+                UsersId = LocalUser.UserId,
+                Id=salaryId
+            };
+
+            // Send Data to data base
+            var result = await Task.Run(() => salaryDataHelper.Edit(salaryRate));
+            if (result == "1")
+            {
+                // Success
+                SystemRecordHelper.Add("Изменение функциональной оценки.",
+                    $"Была изменена функциональная оценка, которая соответствует идентификационному номеру {salaryRate.Id}");
+                parentPage.LoadData();
+                ToastHelper.ShowEditToast();
+                this.Close();
+            }
+            else
+            {
+                // Msg Box with result
+                MessageBox.Show(result);
+            }
+        }
+
+        private async void SetDataForEdit()
+        {
+            // Get Edit Salary Data
+            var _salary = await Task.Run(() => salaryDataHelper.Find(salaryId));
+            if (_salary != null)
+            {
+                textBoxSalary.Text = _salary.Salary.ToString();
+                textBoxBouncYear.Text = _salary.BonusYearRate.ToString();
+                numericUpDownDegree.Value = _salary.Degree;
+                numericUpDownPromtion.Value = _salary.PromotionYear;
+            }
+        }
+
+        #endregion
     }
 }

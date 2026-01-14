@@ -111,6 +111,7 @@
             comboBoxRole.Name = "comboBoxRole";
             comboBoxRole.Size = new Size(227, 28);
             comboBoxRole.TabIndex = 3;
+            comboBoxRole.SelectedIndexChanged += comboBoxRole_SelectedIndexChanged;
             // 
             // textBoxPassword
             // 

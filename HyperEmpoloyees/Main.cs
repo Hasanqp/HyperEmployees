@@ -1,4 +1,5 @@
-using HyperEmpoloyees.Code.Helpers;
+﻿using HyperEmpoloyees.Code.Helpers;
+using HyperEmpoloyees.Gui.AboutGui;
 
 namespace HyperEmpoloyees
 {
@@ -42,11 +43,11 @@ namespace HyperEmpoloyees
 
         private void Main_FormClosing(object sender, FormClosingEventArgs e)
         {
-            SaveWinodwStateSettings();
+            SaveWindowStateSettings();
             Application.Exit();
         }
 
-        private void SaveWinodwStateSettings()
+        private void SaveWindowStateSettings()
         {
             // Save Window State
             if (WindowState == FormWindowState.Maximized)
@@ -62,7 +63,7 @@ namespace HyperEmpoloyees
         }
 
         #endregion
-        #region Evints
+        #region Events
 
         private void buttonHome_Click(object sender, EventArgs e)
         {
@@ -81,17 +82,29 @@ namespace HyperEmpoloyees
 
         private void buttonEmployees_Click(object sender, EventArgs e)
         {
-            pageHelper.SetPage(Gui.EmpoloyeesGui.EmpoloyeesUserControl.Instance(this));
+            pageHelper.SetPage(Gui.EmpoloyeesGui.EmployeesUserControl.Instance(this));
         }
 
         private void buttonRetiremnt_Click(object sender, EventArgs e)
         {
+            // TODO: Retirement feature (Phase 2)
+            MessageBox.Show(
+                "Модуль управления пенсиями будет доступен на втором этапе.",
+                "Скоро будет доступен",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information
+            );
 
         }
 
         private void buttonReports_Click(object sender, EventArgs e)
         {
-
+            MessageBox.Show(
+                "Модуль отчетов будет доступен на втором этапе.",
+                "Скоро будет доступен",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information
+            );
         }
 
         private void buttonSystemRecords_Click(object sender, EventArgs e)
@@ -107,12 +120,18 @@ namespace HyperEmpoloyees
 
         private void buttonHelp_Click(object sender, EventArgs e)
         {
-
+            // TODO: Help feature (Phase 2)
+            MessageBox.Show(
+                "Модуль справки будет доступен на втором этапе.",
+                "Скоро будет доступен",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information
+            );
         }
 
         private void buttonAbout_Click(object sender, EventArgs e)
         {
-
+            new AboutAboutBox().ShowDialog();
         }
         #endregion
     }

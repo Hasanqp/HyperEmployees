@@ -23,19 +23,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Gui\BookThanksGui\AddBookThanksForm.cs">
+    <Compile Update="Gui\EmployeeRewardsGui\AddEmployeeRewardsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Update="Gui\BookThanksGui\BookThanksUserControl.cs">
+    <Compile Update="Gui\EmployeeRewardsGui\EmployeeRewardsUserControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Update="Gui\EmployeesRecordsGui\EmpoloyeesRecordsUserControl.cs">
+    <Compile Update="Gui\EmployeesRecordsGui\EmployeesRecordsUserControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Update="Gui\EmpoloyeesGui\AddEmpoloyeesForm.cs">
+    <Compile Update="Gui\EmployeesGui\AddEmployeesForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Update="Gui\EmpoloyeesGui\EmpoloyeesUserControl.cs">
+    <Compile Update="Gui\EmployeesGui\EmployeesUserControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Update="Gui\SystemRecordsGui\SystemRecordsUserControl.cs">
