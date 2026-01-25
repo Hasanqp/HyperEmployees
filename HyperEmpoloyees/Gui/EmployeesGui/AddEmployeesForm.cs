@@ -7,6 +7,7 @@ using HyperEmpoloyees.Gui.EmployeesRecordsGui;
 using HyperEmpoloyees.Gui.HomeGui;
 using HyperEmpoloyees.Gui.LoadingGui;
 using System.Data;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace HyperEmpoloyees.Gui.EmpoloyeesGui
 {
@@ -477,22 +478,37 @@ namespace HyperEmpoloyees.Gui.EmpoloyeesGui
                 // Set Date
                 dateTimePickerNextDate.Value = dateTimePickerCurrentDate.Value.AddYears(1);
 
+                //// Set Saalry
+                //textBoxCurrentSalary.Text = GetSalary(currentStage, currentRate).ToString();
+                //textBoxNextSalary.Text = GetSalary((int)numericUpDownNextStage.Value, currentRate).ToString();
+
                 // Set Saalry
-                textBoxCurrentSalary.Text = GetSalary(currentStage, currentRate).ToString();
-                textBoxNextSalary.Text = GetSalary((int)numericUpDownNextStage.Value, currentRate).ToString();
+                double currentSalary = GetSalary(currentStage, currentRate);
+                double nextSalary = GetSalary((int)numericUpDownNextStage.Value, currentRate);
+
+                // promotion must NOT reduce salary
+                if (nextSalary < currentSalary)
+                {
+                    nextSalary = currentSalary;
+                }
+
+                textBoxCurrentSalary.Text = currentSalary.ToString("F0");
+                textBoxNextSalary.Text = nextSalary.ToString("F0");
             }
         }
 
         private double GetSalary(int stage, SalaryRate salaryRate)
         {
-            if (stage == 1)
-            {
-                return salaryRate.Salary;
-            }
-            else
-            {
-                return (--stage * salaryRate.BonusYearRate) + salaryRate.Salary;
-            }
+            double baseSalary = salaryRate.Salary;
+            double bonusPercent = salaryRate.BonusYearRate / 100.0;
+
+            if (stage <= 1)
+                return baseSalary;
+
+            int bonusYears = stage - 1;
+            double bonusAmount = baseSalary * bonusPercent * bonusYears;
+
+            return baseSalary + bonusAmount;
         }
 
         private void LoadEmployeeFromForm()
