@@ -11,10 +11,12 @@
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.102.3" />
     <PackageReference Include="FastMember" Version="1.5.0" />
+    <PackageReference Include="LiveCharts.WinForms.NetCore3" Version="0.9.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.19">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="SkiaSharp" Version="3.119.1" />
   </ItemGroup>
 
   <ItemGroup>

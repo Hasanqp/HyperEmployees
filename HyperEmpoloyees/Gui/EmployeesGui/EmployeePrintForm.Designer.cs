@@ -61,7 +61,7 @@
             groupBox1.Controls.Add(buttonPreview);
             groupBox1.Controls.Add(label4);
             groupBox1.Controls.Add(label3);
-            groupBox1.ForeColor = Color.FromArgb(0, 0, 192);
+            groupBox1.ForeColor = Color.Black;
             groupBox1.Location = new Point(5, 11);
             groupBox1.Margin = new Padding(2);
             groupBox1.Name = "groupBox1";
@@ -69,12 +69,12 @@
             groupBox1.Size = new Size(233, 167);
             groupBox1.TabIndex = 5;
             groupBox1.TabStop = false;
-            groupBox1.Text = "Информационная книга благодарностей";
+            groupBox1.Text = "Форма печати";
             // 
             // comboBoxColor
             // 
             comboBoxColor.FormattingEnabled = true;
-            comboBoxColor.Items.AddRange(new object[] { "Black & White", "Color" });
+            comboBoxColor.Items.AddRange(new object[] { "Черно-белая", "Цветная" });
             comboBoxColor.Location = new Point(8, 59);
             comboBoxColor.Name = "comboBoxColor";
             comboBoxColor.Size = new Size(224, 23);
@@ -93,7 +93,7 @@
             // 
             label4.AutoSize = true;
             label4.ForeColor = Color.Red;
-            label4.Location = new Point(64, 40);
+            label4.Location = new Point(82, 40);
             label4.Name = "label4";
             label4.Size = new Size(12, 15);
             label4.TabIndex = 0;
@@ -105,9 +105,9 @@
             label3.ForeColor = Color.Black;
             label3.Location = new Point(7, 41);
             label3.Name = "label3";
-            label3.Size = new Size(48, 15);
+            label3.Size = new Size(80, 15);
             label3.TabIndex = 0;
-            label3.Text = "Число :";
+            label3.Text = "Цвет печати :";
             // 
             // EmployeePrintForm
             // 
@@ -119,7 +119,6 @@
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "EmployeePrintForm";
-            Text = "EmployeePrintForm";
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
             ResumeLayout(false);

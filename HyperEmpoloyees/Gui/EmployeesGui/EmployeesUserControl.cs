@@ -243,6 +243,19 @@ namespace HyperEmpoloyees.Gui.EmpoloyeesGui
 
         }
 
+        private void buttonPrint_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.Rows.Count == 0)
+            {
+                MsgHelper.ShowEmptyDataGridView();
+                return;
+            }
+
+            using (EmployeePrintForm printForm = new EmployeePrintForm(dataGridView1))
+            {
+                printForm.ShowDialog();
+            }
+        }
         #endregion
 
         #region Methods
@@ -460,10 +473,6 @@ namespace HyperEmpoloyees.Gui.EmpoloyeesGui
                     dataTable.Columns.Remove(column);
             }
 
-
-            //dataTable.Columns.Remove("UsersId");
-            //dataTable.Columns.Remove("Note");
-            //dataTable.Columns.Remove("AddedDate");
             //dataTable.Columns.Remove("UpdateDate");
 
             return dataTable;
@@ -476,28 +485,6 @@ namespace HyperEmpoloyees.Gui.EmpoloyeesGui
 
             return await Task.Run(() => employeeDataHelper.GetDataByUser(LocalUser.UserId));
         }
-
-        private Employee? GetSelectedEmployee()
-        {
-            if (dataGridView1.CurrentRow == null)
-                return null;
-
-            return dataGridView1.CurrentRow.DataBoundItem as Employee;
-        }
         #endregion
-
-        private void buttonPrint_Click(object sender, EventArgs e)
-        {
-            if (dataGridView1.Rows.Count == 0)
-            {   
-                MsgHelper.ShowEmptyDataGridView();
-                return;
-            }
-
-            using (EmployeePrintForm printForm = new EmployeePrintForm(dataGridView1))
-            {
-                printForm.ShowDialog();
-            }
-        }
     }
 }

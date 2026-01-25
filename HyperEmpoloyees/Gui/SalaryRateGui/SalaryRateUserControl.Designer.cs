@@ -40,7 +40,6 @@
             buttonDelete = new Button();
             buttonExportAll = new Button();
             buttonExportDataGridView = new Button();
-            buttonPrint = new Button();
             panel1 = new Panel();
             textBoxSearch = new TextBox();
             buttonSearch = new Button();
@@ -71,7 +70,6 @@
             flowLayoutPanel1.Controls.Add(buttonDelete);
             flowLayoutPanel1.Controls.Add(buttonExportAll);
             flowLayoutPanel1.Controls.Add(buttonExportDataGridView);
-            flowLayoutPanel1.Controls.Add(buttonPrint);
             flowLayoutPanel1.Controls.Add(panel1);
             flowLayoutPanel1.Dock = DockStyle.Top;
             flowLayoutPanel1.Location = new Point(0, 0);
@@ -116,7 +114,7 @@
             buttonDelete.ImageAlign = ContentAlignment.MiddleLeft;
             buttonDelete.Location = new Point(303, 8);
             buttonDelete.Name = "buttonDelete";
-            buttonDelete.Size = new Size(114, 41);
+            buttonDelete.Size = new Size(130, 41);
             buttonDelete.TabIndex = 0;
             buttonDelete.Text = "  Удалить";
             toolTip1.SetToolTip(buttonDelete, "Вы можете удалить сразу несколько строк");
@@ -128,9 +126,9 @@
             buttonExportAll.BackColor = Color.White;
             buttonExportAll.Image = Properties.Resources.icons8_microsoft_excel_2019_32px;
             buttonExportAll.ImageAlign = ContentAlignment.MiddleLeft;
-            buttonExportAll.Location = new Point(423, 8);
+            buttonExportAll.Location = new Point(439, 8);
             buttonExportAll.Name = "buttonExportAll";
-            buttonExportAll.Size = new Size(100, 41);
+            buttonExportAll.Size = new Size(110, 41);
             buttonExportAll.TabIndex = 0;
             buttonExportAll.Text = "   Все";
             toolTip1.SetToolTip(buttonExportAll, "Экспортируйте все данные");
@@ -142,32 +140,20 @@
             buttonExportDataGridView.BackColor = Color.White;
             buttonExportDataGridView.Image = Properties.Resources.icons8_Microsoft_Excel_32px;
             buttonExportDataGridView.ImageAlign = ContentAlignment.MiddleLeft;
-            buttonExportDataGridView.Location = new Point(529, 8);
+            buttonExportDataGridView.Location = new Point(555, 8);
             buttonExportDataGridView.Name = "buttonExportDataGridView";
-            buttonExportDataGridView.Size = new Size(100, 41);
+            buttonExportDataGridView.Size = new Size(115, 41);
             buttonExportDataGridView.TabIndex = 2;
             buttonExportDataGridView.Text = "   Сеть";
             toolTip1.SetToolTip(buttonExportDataGridView, "Экспорт отображения сетевых данных");
             buttonExportDataGridView.UseVisualStyleBackColor = false;
             buttonExportDataGridView.Click += buttonExportDataGridView_Click;
             // 
-            // buttonPrint
-            // 
-            buttonPrint.BackColor = Color.White;
-            buttonPrint.ImageAlign = ContentAlignment.MiddleLeft;
-            buttonPrint.Location = new Point(635, 8);
-            buttonPrint.Name = "buttonPrint";
-            buttonPrint.Size = new Size(100, 41);
-            buttonPrint.TabIndex = 3;
-            buttonPrint.Text = "Печать";
-            toolTip1.SetToolTip(buttonPrint, "Распечатать данные");
-            buttonPrint.UseVisualStyleBackColor = false;
-            // 
             // panel1
             // 
             panel1.Controls.Add(textBoxSearch);
             panel1.Controls.Add(buttonSearch);
-            panel1.Location = new Point(741, 8);
+            panel1.Location = new Point(676, 8);
             panel1.Name = "panel1";
             panel1.Size = new Size(298, 41);
             panel1.TabIndex = 1;
@@ -391,6 +377,5 @@
         private Button buttonNext;
         private Button buttonPrev;
         private Label labelNoOfItems;
-        private Button buttonPrint;
     }
 }

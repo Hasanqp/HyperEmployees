@@ -1,6 +1,4 @@
-﻿//using DocumentFormat.OpenXml.Spreadsheet;
-using HyperEmpoloyees.Core;
-using System.Drawing.Printing;
+﻿using System.Drawing.Printing;
 
 namespace HyperEmpoloyees.Gui.EmployeesGui
 {
@@ -40,11 +38,11 @@ namespace HyperEmpoloyees.Gui.EmployeesGui
             int x = leftMargin;
             int y = topMargin;
 
-            // ================= TITLE =================
+            // TITLE
             if (isNewPage)
             {
                 e.Graphics.DrawString(
-                    "Employees List",
+                    "Список сотрудников",
                     new Font("Arial", 18, FontStyle.Bold),
                     brush,
                     leftMargin,
@@ -53,7 +51,7 @@ namespace HyperEmpoloyees.Gui.EmployeesGui
 
                 y += 50;
 
-                // ================= HEADERS =================
+                // HEADERS
                 int printableWidth = e.MarginBounds.Width;
 
                 visibleColumns = _grid.Columns
@@ -97,7 +95,7 @@ namespace HyperEmpoloyees.Gui.EmployeesGui
                 isNewPage = false;
             }
 
-            // ================= ROWS =================
+            // ROWS
             while (currentRowIndex < _grid.Rows.Count)
             {
                 if (y + rowHeight > e.MarginBounds.Bottom)
@@ -144,7 +142,7 @@ namespace HyperEmpoloyees.Gui.EmployeesGui
                 currentRowIndex++;
             }
 
-            // ================= END =================
+            // END
             currentRowIndex = 0;
             isNewPage = true;
             e.HasMorePages = false;
@@ -156,7 +154,7 @@ namespace HyperEmpoloyees.Gui.EmployeesGui
 
             if (comboBoxColor.SelectedIndex == -1)
             {
-                MessageBox.Show("Please select print color mode");
+                MessageBox.Show("Пожалуйста, выберите режим печати");
                 return;
             }
 

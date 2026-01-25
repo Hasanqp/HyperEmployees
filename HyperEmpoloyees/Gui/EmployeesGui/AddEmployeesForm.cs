@@ -4,6 +4,7 @@ using HyperEmpoloyees.Core;
 using HyperEmpoloyees.Data.EF;
 using HyperEmpoloyees.Gui.EmployeeRewardsGui;
 using HyperEmpoloyees.Gui.EmployeesRecordsGui;
+using HyperEmpoloyees.Gui.HomeGui;
 using HyperEmpoloyees.Gui.LoadingGui;
 using System.Data;
 
@@ -92,6 +93,8 @@ namespace HyperEmpoloyees.Gui.EmpoloyeesGui
                 await Task.Run(() => employeesDataHelper.Add(employee));
             else
                 await Task.Run(() => employeesDataHelper.Edit(employee));
+
+            HomeUserControl.Instance().RefreshCharts();
 
             parentPage.LoadData();
             LoadingForm.Instance(mainForm).Hide();
@@ -254,6 +257,9 @@ namespace HyperEmpoloyees.Gui.EmpoloyeesGui
                 SystemRecordHelper.Add("Добавьте запись о сотруднике",
                     $"Добавлена запись о сотруднике с идентификационным номером {employeeRecord.Id}");
                 parentPage.LoadData();
+
+                HomeUserControl.Instance().RefreshCharts();
+
                 ToastHelper.ShowAddToast();
                 employeeId = employeeRecord.Id;
                 SetRolesOfTabs();
@@ -302,6 +308,9 @@ namespace HyperEmpoloyees.Gui.EmpoloyeesGui
                 SystemRecordHelper.Add("Изменить сотрудника",
                     $"Существующий сотрудник с идентификатором был изменен. {employee.Id}");
                 parentPage.LoadData();
+
+                HomeUserControl.Instance().RefreshCharts();
+
                 ToastHelper.ShowEditToast();
             }
             else
