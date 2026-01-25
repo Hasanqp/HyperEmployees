@@ -2,6 +2,7 @@
 using HyperEmpoloyees.Code.Models;
 using HyperEmpoloyees.Core;
 using HyperEmpoloyees.Data.EF;
+using HyperEmpoloyees.Gui.EmployeesGui;
 using HyperEmpoloyees.Gui.LoadingGui;
 using System.Data;
 
@@ -43,7 +44,6 @@ namespace HyperEmpoloyees.Gui.EmpoloyeesGui
             {
                 addEmployeesForm.Focus();
             }
-
         }
 
         private void buttonEdit_Click(object sender, EventArgs e)
@@ -243,6 +243,19 @@ namespace HyperEmpoloyees.Gui.EmpoloyeesGui
 
         }
 
+        private void buttonPrint_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.Rows.Count == 0)
+            {
+                MsgHelper.ShowEmptyDataGridView();
+                return;
+            }
+
+            using (EmployeePrintForm printForm = new EmployeePrintForm(dataGridView1))
+            {
+                printForm.ShowDialog();
+            }
+        }
         #endregion
 
         #region Methods
@@ -365,9 +378,9 @@ namespace HyperEmpoloyees.Gui.EmpoloyeesGui
             dataGridView1.Columns[5].HeaderCell.Value = "Текущая оценка";
             dataGridView1.Columns[6].HeaderCell.Value = "Текущий этап";
             dataGridView1.Columns[7].HeaderCell.Value = "Текущая заработная плата";
-             dataGridView1.Columns[8].HeaderCell.Value = "Текущая история";
+            dataGridView1.Columns[8].HeaderCell.Value = "Текущая история";
 
-             dataGridView1.Columns[9].HeaderCell.Value = "Следующая степень";
+            dataGridView1.Columns[9].HeaderCell.Value = "Следующая степень";
             dataGridView1.Columns[10].HeaderCell.Value = "Следующий этап";
             dataGridView1.Columns[11].HeaderCell.Value = "Следующая зарплата";
             dataGridView1.Columns[12].HeaderCell.Value = "Следующая дата";
@@ -419,20 +432,48 @@ namespace HyperEmpoloyees.Gui.EmpoloyeesGui
             dataTable.Columns["Id"].SetOrdinal(0);
             dataTable.Columns["Id"].ColumnName = "Id";
 
-            dataTable.Columns["Degree"].SetOrdinal(1);
-            dataTable.Columns["Degree"].ColumnName = "Функциональная оценка";
+            dataTable.Columns["Name"].SetOrdinal(1);
+            dataTable.Columns["Name"].ColumnName = "Полное имя";
 
-            dataTable.Columns["Salary"].SetOrdinal(2);
-            dataTable.Columns["Salary"].ColumnName = $"Зарплата {Properties.Settings.Default.Currency}";
+            dataTable.Columns["JobTitle"].SetOrdinal(2);
+            dataTable.Columns["JobTitle"].ColumnName = "Должность";
 
-            dataTable.Columns["BounsYearRate"].SetOrdinal(3);
-            dataTable.Columns["BounsYearRate"].ColumnName = $"Ежегодное пособие {Properties.Settings.Default.Currency}";
+            dataTable.Columns["EmploymentState"].SetOrdinal(3);
+            dataTable.Columns["EmploymentState"].ColumnName = "Статус";
 
-            dataTable.Columns["PromotionMonth"].SetOrdinal(4);
-            dataTable.Columns["PromotionMonth"].ColumnName = "Годы продвижения по службе";
+            dataTable.Columns["CurrentSalary"].SetOrdinal(4);
+            dataTable.Columns["CurrentSalary"].ColumnName = $"Текущая зарплата {Properties.Settings.Default.Currency}";
 
-            // Removed columns
-            dataTable.Columns.Remove("UsersId");
+            dataTable.Columns["NextSalary"].SetOrdinal(5);
+            dataTable.Columns["NextSalary"].ColumnName = $"Следующая зарплата {Properties.Settings.Default.Currency}";
+
+            dataTable.Columns["LastPromotionDate"].SetOrdinal(6);
+            dataTable.Columns["LastPromotionDate"].ColumnName = "Последнее повышение";
+
+            // Remove columns we don't want in Excel
+            string[] columnsToRemove =
+                {
+                "UsersId",
+                "Note",
+                "AddedDate",
+                "UpdateDate",
+                "CurrentDate",
+                "CurrentDegree",
+                "CurrentStage",
+                "NextDate",
+                "NextDegree",
+                "NextStage",
+                "Records",
+                "Rewards"
+            };
+
+            foreach (var column in columnsToRemove)
+            {
+                if (dataTable.Columns.Contains(column))
+                    dataTable.Columns.Remove(column);
+            }
+
+            //dataTable.Columns.Remove("UpdateDate");
 
             return dataTable;
         }

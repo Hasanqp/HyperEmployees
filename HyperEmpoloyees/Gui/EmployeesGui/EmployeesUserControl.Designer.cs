@@ -40,6 +40,7 @@
             buttonDelete = new Button();
             buttonExportAll = new Button();
             buttonExportDataGridView = new Button();
+            buttonPrint = new Button();
             panel1 = new Panel();
             textBoxSearch = new TextBox();
             buttonSearch = new Button();
@@ -70,6 +71,7 @@
             flowLayoutPanel1.Controls.Add(buttonDelete);
             flowLayoutPanel1.Controls.Add(buttonExportAll);
             flowLayoutPanel1.Controls.Add(buttonExportDataGridView);
+            flowLayoutPanel1.Controls.Add(buttonPrint);
             flowLayoutPanel1.Controls.Add(panel1);
             flowLayoutPanel1.Dock = DockStyle.Top;
             flowLayoutPanel1.Location = new Point(0, 0);
@@ -86,9 +88,9 @@
             buttonAdd.ImageAlign = ContentAlignment.MiddleLeft;
             buttonAdd.Location = new Point(8, 8);
             buttonAdd.Name = "buttonAdd";
-            buttonAdd.Size = new Size(156, 41);
+            buttonAdd.Size = new Size(128, 41);
             buttonAdd.TabIndex = 0;
-            buttonAdd.Text = "   Добавлять";
+            buttonAdd.Text = "      Добавлять";
             toolTip1.SetToolTip(buttonAdd, "Добавьте новые данные");
             buttonAdd.UseVisualStyleBackColor = false;
             buttonAdd.Click += buttonAdd_Click;
@@ -98,7 +100,7 @@
             buttonEdit.BackColor = Color.White;
             buttonEdit.Image = Properties.Resources.icons8_edit_32px;
             buttonEdit.ImageAlign = ContentAlignment.MiddleLeft;
-            buttonEdit.Location = new Point(170, 8);
+            buttonEdit.Location = new Point(142, 8);
             buttonEdit.Name = "buttonEdit";
             buttonEdit.Size = new Size(156, 41);
             buttonEdit.TabIndex = 0;
@@ -112,11 +114,11 @@
             buttonDelete.BackColor = Color.White;
             buttonDelete.Image = Properties.Resources.icons8_Delete_32px;
             buttonDelete.ImageAlign = ContentAlignment.MiddleLeft;
-            buttonDelete.Location = new Point(332, 8);
+            buttonDelete.Location = new Point(304, 8);
             buttonDelete.Name = "buttonDelete";
-            buttonDelete.Size = new Size(156, 41);
+            buttonDelete.Size = new Size(100, 41);
             buttonDelete.TabIndex = 0;
-            buttonDelete.Text = "   Удалить";
+            buttonDelete.Text = "      Удалить";
             toolTip1.SetToolTip(buttonDelete, "Вы можете удалить сразу несколько строк");
             buttonDelete.UseVisualStyleBackColor = false;
             buttonDelete.Click += buttonDelete_Click;
@@ -126,11 +128,11 @@
             buttonExportAll.BackColor = Color.White;
             buttonExportAll.Image = Properties.Resources.icons8_microsoft_excel_2019_32px;
             buttonExportAll.ImageAlign = ContentAlignment.MiddleLeft;
-            buttonExportAll.Location = new Point(494, 8);
+            buttonExportAll.Location = new Point(410, 8);
             buttonExportAll.Name = "buttonExportAll";
-            buttonExportAll.Size = new Size(100, 41);
+            buttonExportAll.Size = new Size(79, 41);
             buttonExportAll.TabIndex = 0;
-            buttonExportAll.Text = "   Все";
+            buttonExportAll.Text = "     Все";
             toolTip1.SetToolTip(buttonExportAll, "Экспортируйте все данные");
             buttonExportAll.UseVisualStyleBackColor = false;
             buttonExportAll.Click += buttonExportAll_Click;
@@ -140,20 +142,32 @@
             buttonExportDataGridView.BackColor = Color.White;
             buttonExportDataGridView.Image = Properties.Resources.icons8_Microsoft_Excel_32px;
             buttonExportDataGridView.ImageAlign = ContentAlignment.MiddleLeft;
-            buttonExportDataGridView.Location = new Point(600, 8);
+            buttonExportDataGridView.Location = new Point(495, 8);
             buttonExportDataGridView.Name = "buttonExportDataGridView";
-            buttonExportDataGridView.Size = new Size(100, 41);
+            buttonExportDataGridView.Size = new Size(81, 41);
             buttonExportDataGridView.TabIndex = 2;
-            buttonExportDataGridView.Text = "   Сеть";
+            buttonExportDataGridView.Text = "    Сеть";
             toolTip1.SetToolTip(buttonExportDataGridView, "Экспорт отображения сетевых данных");
             buttonExportDataGridView.UseVisualStyleBackColor = false;
             buttonExportDataGridView.Click += buttonExportDataGridView_Click;
+            // 
+            // buttonPrint
+            // 
+            buttonPrint.BackColor = Color.White;
+            buttonPrint.ImageAlign = ContentAlignment.MiddleLeft;
+            buttonPrint.Location = new Point(582, 8);
+            buttonPrint.Name = "buttonPrint";
+            buttonPrint.Size = new Size(100, 41);
+            buttonPrint.TabIndex = 5;
+            buttonPrint.Text = "Печать";
+            buttonPrint.UseVisualStyleBackColor = false;
+            buttonPrint.Click += buttonPrint_Click;
             // 
             // panel1
             // 
             panel1.Controls.Add(textBoxSearch);
             panel1.Controls.Add(buttonSearch);
-            panel1.Location = new Point(706, 8);
+            panel1.Location = new Point(688, 8);
             panel1.Name = "panel1";
             panel1.Size = new Size(323, 41);
             panel1.TabIndex = 1;
@@ -377,5 +391,6 @@
         private Button buttonNext;
         private Button buttonPrev;
         private Label labelNoOfItems;
+        private Button buttonPrint;
     }
 }

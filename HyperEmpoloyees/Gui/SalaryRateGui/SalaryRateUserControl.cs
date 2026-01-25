@@ -4,6 +4,7 @@ using HyperEmpoloyees.Core;
 using HyperEmpoloyees.Data.EF;
 using HyperEmpoloyees.Gui.LoadingGui;
 using System.Data;
+using System.Drawing.Printing;
 
 namespace HyperEmpoloyees.Gui.SalaryRateGui
 {
@@ -444,11 +445,11 @@ namespace HyperEmpoloyees.Gui.SalaryRateGui
             dataTable.Columns["Salary"].SetOrdinal(2);
             dataTable.Columns["Salary"].ColumnName = $"Зарплата {Properties.Settings.Default.Currency}";
 
-            dataTable.Columns["BounsYearRate"].SetOrdinal(3);
-            dataTable.Columns["BounsYearRate"].ColumnName = $"Ежегодное пособие {Properties.Settings.Default.Currency}";
+            dataTable.Columns["BonusYearRate"].SetOrdinal(3);
+            dataTable.Columns["BonusYearRate"].ColumnName = $"Ежегодное пособие {Properties.Settings.Default.Currency}";
 
-            dataTable.Columns["PromotionMonth"].SetOrdinal(4);
-            dataTable.Columns["PromotionMonth"].ColumnName = "Годы продвижения по службе";
+            dataTable.Columns["PromotionYear"].SetOrdinal(4);
+            dataTable.Columns["PromotionYear"].ColumnName = "Годы продвижения по службе";
 
             // Removed columns
             dataTable.Columns.Remove("UsersId");
@@ -456,7 +457,5 @@ namespace HyperEmpoloyees.Gui.SalaryRateGui
             return dataTable;
         }
         #endregion
-
-
     }
 }

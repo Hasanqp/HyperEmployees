@@ -192,7 +192,7 @@
             comboBoxEmpState.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
             comboBoxEmpState.AutoCompleteSource = AutoCompleteSource.CustomSource;
             comboBoxEmpState.FormattingEnabled = true;
-            comboBoxEmpState.Items.AddRange(new object[] { "Бонусов", "Продвижение", "Участие в розыгрыше бонуса", "Запись об акции", "Остановился", "В стадии обработки" });
+            comboBoxEmpState.Items.AddRange(new object[] { "Активен", "В отпуске", "Бонусов", "Продвижение", "Участие в розыгрыше бонуса", "Запись об акции", "Остановился", "В стадии обработки" });
             comboBoxEmpState.Location = new Point(573, 56);
             comboBoxEmpState.Name = "comboBoxEmpState";
             comboBoxEmpState.Size = new Size(179, 28);
@@ -586,42 +586,42 @@
             // 
             // tabPage2
             // 
-            tabPage2.Location = new Point(4, 24);
+            tabPage2.Location = new Point(4, 29);
             tabPage2.Name = "tabPage2";
             tabPage2.Padding = new Padding(3);
-            tabPage2.Size = new Size(1019, 528);
+            tabPage2.Size = new Size(1019, 523);
             tabPage2.TabIndex = 1;
             tabPage2.Text = "Благодарность ";
             tabPage2.UseVisualStyleBackColor = true;
             // 
             // tabPage3
             // 
-            tabPage3.Location = new Point(4, 24);
+            tabPage3.Location = new Point(4, 29);
             tabPage3.Name = "tabPage3";
-            tabPage3.Size = new Size(1019, 528);
+            tabPage3.Size = new Size(1019, 523);
             tabPage3.TabIndex = 2;
             tabPage3.Text = "Каникулы";
             tabPage3.UseVisualStyleBackColor = true;
             // 
             // tabPage4
             // 
-            tabPage4.Location = new Point(4, 24);
+            tabPage4.Location = new Point(4, 29);
             tabPage4.Name = "tabPage4";
-            tabPage4.Size = new Size(1019, 528);
+            tabPage4.Size = new Size(1019, 523);
             tabPage4.TabIndex = 3;
             tabPage4.Text = "Отсутствие";
             tabPage4.UseVisualStyleBackColor = true;
             // 
             // tabPage5
             // 
-            tabPage5.Location = new Point(4, 24);
+            tabPage5.Location = new Point(4, 29);
             tabPage5.Name = "tabPage5";
-            tabPage5.Size = new Size(1019, 528);
+            tabPage5.Size = new Size(1019, 523);
             tabPage5.TabIndex = 4;
             tabPage5.Text = "Послужной список бонус-трека";
             tabPage5.UseVisualStyleBackColor = true;
             // 
-            // AddEmpoloyeesForm
+            // AddEmployeesForm
             // 
             AutoScaleDimensions = new SizeF(9F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -631,7 +631,7 @@
             Font = new Font("Segoe UI Semibold", 11.25F, FontStyle.Bold, GraphicsUnit.Point);
             Icon = (Icon)resources.GetObject("$this.Icon");
             Margin = new Padding(4);
-            Name = "AddEmpoloyeesForm";
+            Name = "AddEmployeesForm";
             ShowIcon = false;
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.CenterScreen;
